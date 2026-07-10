@@ -31,9 +31,9 @@ Uygulamanın kimliği: oyunlaştırmaya kaçmadan "her gün 10 dakikaya değer" 
 
 - [x] Mece tüy koleksiyonu (öğrenilen kelime = tüy; kalıcı, yarışsız ilerleme)
 - [ ] Örnek cümleleri İngilizce'de tüm seviyelere yay (diğer diller: kalite riski nedeniyle beklet)
-- [ ] Dil bitirme finali + yeni dile davet
-- [ ] Favori kelimeler
-- [ ] İstatistik ekranı (Faz 1'deki kayıt biriktikten sonra)
+- [x] Dil bitirme finali + yeni dile davet
+- [x] Favori kelimeler
+- [x] İstatistik ekranı (Faz 1'deki kayıt biriktikten sonra)
 
 ## Bilinçli olarak yapılmayacaklar
 

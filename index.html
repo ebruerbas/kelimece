@@ -221,6 +221,8 @@
     padding: 5px 14px; min-height: 44px; min-width: 44px; cursor: pointer; font-size: 0.875rem; font-family: inherit; font-weight: 600; }
   .speak-btn:hover { filter: brightness(.95); }
   .speak-btn.mini { padding: 6px 10px; min-height: 38px; min-width: 38px; font-size: 0.8125rem; margin-left: 4px; }
+  .fav-btn { background: none; border: none; cursor: pointer; font-size: 1.125rem; color: var(--muted); min-height: 38px; min-width: 38px; padding: 4px; }
+  .fav-btn.on { color: var(--amber); }
 </style>
 </head>
 <body>
@@ -344,6 +346,11 @@
       <div><div class="tt">Tekrar Quizi</div><div class="dd" id="review-desc">Öğrendiklerin kalıcı mı? Kendini sına</div></div>
       <div class="arrow">›</div>
     </div>
+    <div class="menu-card" onclick="showStats()">
+      <div class="ico" aria-hidden="true">📊</div>
+      <div><div class="tt">İstatistiklerim</div><div class="dd">Günler, kelimeler, başarı oranı</div></div>
+      <div class="arrow">›</div>
+    </div>
     <div style="display:flex;gap:10px;justify-content:center;margin-top:20px">
       <button class="btn ghost small" onclick="exportBackup()">⬇ Yedekle</button>
       <button class="btn ghost small" onclick="$('import-file').click()">⬆ Geri Yükle</button>
@@ -429,12 +436,36 @@
   </div>
 
   <!-- LEARNED WORDS -->
+  <!-- İSTATİSTİKLER -->
+  <div id="scr-stats" class="screen">
+    <button class="back" onclick="showHome()">‹ Ana sayfa</button>
+    <h2>İstatistiklerim</h2>
+    <p class="sub" id="stats-sub"></p>
+    <div class="stat-row" style="margin-top:16px">
+      <div class="stat"><div class="num" id="sx-days">0</div><div class="lbl">Çalışılan gün</div></div>
+      <div class="stat"><div class="num" id="sx-words">0</div><div class="lbl">Öğrenilen</div></div>
+      <div class="stat"><div class="num" id="sx-rate">–</div><div class="lbl">Başarı</div></div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <strong style="font-size:0.875rem">Son 7 gün — cevaplanan soru</strong>
+      <div id="stats-week" style="display:flex;align-items:flex-end;gap:6px;height:90px;margin-top:14px"></div>
+      <div id="stats-week-labels" style="display:flex;gap:6px;margin-top:6px"></div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;padding:4px 0"><span class="sub">Toplam cevaplanan soru</span><strong id="sx-q">0</strong></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0"><span class="sub">Doğru cevap</span><strong id="sx-ok">0</strong></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0"><span class="sub">En uzun seri</span><strong id="sx-streak">0</strong></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0"><span class="sub">Mece'nin tüyleri</span><strong id="sx-feather">3</strong></div>
+    </div>
+  </div>
+
   <div id="scr-learned" class="screen">
     <button class="back" onclick="showHome()">‹ Ana sayfa</button>
     <h2>Kelimelerim</h2>
     <div class="tabs" style="margin-top:14px">
       <button class="tab active" id="tab-learned" onclick="learnedTab('learned')">Öğrendiklerim</button>
-      <button class="tab" id="tab-known" onclick="learnedTab('known')">Zaten Bildiklerim</button>
+      <button class="tab" id="tab-known" onclick="learnedTab('known')">Bildiklerim</button>
+      <button class="tab" id="tab-favs" onclick="learnedTab('favs')">★</button>
     </div>
     <div class="card" id="learned-list"></div>
   </div>
@@ -937,7 +968,9 @@ function showMotiv(passedLevel, cb){
   showMotiv2(m[0], m[1], m[2], cb);
 }
 function showMotiv2(emoji, text, sub, cb){
-  $("motiv-emoji").textContent = emoji;
+  /* Emoji yerine SVG (ör. Mece yüzü) de kabul eder */
+  if(String(emoji).startsWith("<")) $("motiv-emoji").innerHTML = emoji;
+  else $("motiv-emoji").textContent = emoji;
   $("motiv-text").textContent = text;
   $("motiv-sub").textContent = sub;
   motivCb = cb;
@@ -999,6 +1032,36 @@ function finishPlacement(level, passedAll){
 }
 
 /* ============ ANA SAYFA ============ */
+/* ============ İSTATİSTİKLER ============ */
+function showStats(){
+  const p = P();
+  const log = p.log || {};
+  const days = Object.keys(log).length;
+  const totQ = Object.values(log).reduce((s,d)=>s+(d.q||0),0);
+  const totOk = Object.values(log).reduce((s,d)=>s+(d.ok||0),0);
+  $("sx-days").textContent = days;
+  $("sx-words").textContent = p.learned.length;
+  $("sx-rate").textContent = totQ ? Math.round(totOk/totQ*100)+"%" : "–";
+  $("sx-q").textContent = totQ;
+  $("sx-ok").textContent = totOk;
+  $("sx-streak").textContent = Math.max(p.bestStreak||0, p.streak||0);
+  $("sx-feather").textContent = featherCount(p) + " 🪶";
+  $("stats-sub").textContent = days ? `${LANGS[S.activeLang].name} yolculuğunda ${days} gün çalıştın.` : "Kayıt yeni başladı — birkaç gün çalışınca burası şenlenecek.";
+  const DAY_NAMES = ["Paz","Pzt","Sal","Çar","Per","Cum","Cmt"];
+  const vals = Array.from({length:7},(_,k)=>{ const d = log[daysAgo(6-k)]; return d ? (d.q||0) : 0; });
+  const max = Math.max(1, ...vals);
+  let bars = "", labels = "";
+  for(let k=0;k<7;k++){
+    const v = vals[k];
+    const dt = new Date(); dt.setDate(dt.getDate()-(6-k));
+    bars += `<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%"><div style="background:${v?"var(--accent)":"var(--border)"};border-radius:6px 6px 0 0;height:${Math.max(Math.round(v/max*100),4)}%" title="${v} soru"></div></div>`;
+    labels += `<div style="flex:1;text-align:center;font-size:0.6875rem;color:var(--muted)">${DAY_NAMES[dt.getDay()]}</div>`;
+  }
+  $("stats-week").innerHTML = bars;
+  $("stats-week-labels").innerHTML = labels;
+  show("scr-stats");
+}
+
 /* ============ YEDEKLEME ============ */
 function exportBackup(){
   const blob = new Blob([JSON.stringify({ app:"kelimece", v:4, exported: new Date().toISOString(), data:S }, null, 1)], {type:"application/json"});
@@ -1333,9 +1396,17 @@ function finishQuiz(){
       }
       else { p.streak = 1; }
       p.lastStreakDay = t;
+      p.bestStreak = Math.max(p.bestStreak||0, p.streak||0);
     }
   }
   const leveled = checkLevelUp(p, true);
+  /* Dil bitirme finali: 320 kelimenin tamamı ilk kez tamamlandıysa büyük kutlama */
+  if(!p.finaleShown && WORDS.every((_,i)=>isDone(p,i))){
+    p.finaleShown = true;
+    setTimeout(()=>showMotiv2(birdFace("party",64), "DİLİ BİTİRDİN! 🎓",
+      `${LANGS[S.activeLang].name} dilindeki 320 kelimenin tamamını tamamladın. Mece'nin kuyruğu dolu, kalbi de öyle. Yeni bir dile başlamak istersen ben hazırım!`,
+      openLangModal), 700);
+  }
   saveState();
   const pct = Math.round(ok/total*100);
   $("qr-emoji").innerHTML = birdFace(pct>=80 ? "party" : pct>=50 ? "cheer" : "oops", 64);
@@ -1395,7 +1466,7 @@ function showLevelDetail(lv){
     else if(p.known.includes(i)) tag = `<span class="tag known">biliyor</span>`;
     /* Anlam sadece öğrenilmiş/bilinen kelimelerde açık — liste kopya kağıdına dönmesin */
     const meaning = isDone(p,i) ? esc(wTr(i)) : `<span style="letter-spacing:2px;color:var(--muted)" role="img" aria-label="Anlamı gizli — quiz yaparak aç" title="Quiz yaparak aç">•••</span>`;
-    return `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))}<button class="speak-btn mini" aria-label="Telaffuzu dinle" onclick="speakIdx(${i})">🔊</button>${tag}</span><span class="m">${meaning}</span></div>`;
+    return `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))}<button class="speak-btn mini" aria-label="Telaffuzu dinle" onclick="speakIdx(${i})">🔊</button>${isDone(p,i)?favBtn(i):""}${tag}</span><span class="m">${meaning}</span></div>`;
   }).join("");
   show("scr-leveldetail");
 }
@@ -1426,18 +1497,34 @@ function startReview(){
 /* ============ KELİMELERİM ============ */
 let learnedMode = "learned";
 function showLearned(){ learnedTab("learned"); show("scr-learned"); }
+function favsOf(p){ if(!p.favs) p.favs = []; return p.favs; }
+function favToggle(wi){
+  const f = favsOf(P());
+  const k = f.indexOf(wi);
+  if(k>=0) f.splice(k,1); else f.push(wi);
+  saveState();
+  /* Hangi ekrandaysak onu tazele */
+  if(document.querySelector("#scr-leveldetail.active")) showLevelDetail(curLevel);
+  else learnedTab(learnedMode);
+}
+function favBtn(wi){
+  const on = favsOf(P()).includes(wi);
+  return `<button class="fav-btn${on?" on":""}" aria-label="${on?"Favorilerden çıkar":"Favorilere ekle"}" onclick="favToggle(${wi})">${on?"★":"☆"}</button>`;
+}
 function learnedTab(mode){
   learnedMode = mode;
   $("tab-learned").className = "tab"+(mode==="learned"?" active":"");
   $("tab-known").className = "tab"+(mode==="known"?" active":"");
+  $("tab-favs").className = "tab"+(mode==="favs"?" active":"");
   const p = P();
-  const list = mode==="learned" ? p.learned : p.known;
+  const list = mode==="learned" ? p.learned : mode==="known" ? p.known : favsOf(p);
   if(list.length===0){
-    $("learned-list").innerHTML = `<div class="empty">${mode==="learned"?"Henüz öğrenilen kelime yok.<br>Günlük kelimelerle başla! 📅":"Henüz \"biliyorum\" dediğin kelime yok."}</div>`;
+    const msgs = { learned:'Henüz öğrenilen kelime yok.<br>Günlük kelimelerle başla! 📅', known:'Henüz "biliyorum" dediğin kelime yok.', favs:'Henüz favori kelimen yok.<br>Yıldıza dokunarak eklersin ☆' };
+    $("learned-list").innerHTML = `<div class="empty">${msgs[mode]}</div>`;
     return;
   }
   $("learned-list").innerHTML = list.slice().sort((a,b)=>a-b).map(i=>
-    `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))}<button class="speak-btn mini" aria-label="Telaffuzu dinle" onclick="speakIdx(${i})">🔊</button> <span class="tag ${mode==="learned"?"learned":"known"}">S${levelOf(i)}</span></span><span class="m">${esc(wTr(i))}</span></div>`).join("");
+    `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))}<button class="speak-btn mini" aria-label="Telaffuzu dinle" onclick="speakIdx(${i})">🔊</button>${favBtn(i)} <span class="tag ${p.learned.includes(i)?"learned":"known"}">S${levelOf(i)}</span></span><span class="m">${esc(wTr(i))}</span></div>`).join("");
 }
 
 /* ============ DİL DEĞİŞTİRME ============ */
