@@ -83,8 +83,10 @@
 
   /* header */
   .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
-  .topbar .brand { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
+  .topbar .brand { display: flex; align-items: center; gap: 7px; font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
   .topbar .brand span { color: var(--accent); }
+  .brand-bird { flex-shrink: 0; display: block; }
+  .hero-illo { display: block; width: 100%; max-width: 330px; margin: -4px auto 10px; }
   .pills { display: flex; gap: 8px; align-items: center; }
   .pill {
     display: inline-flex; align-items: center; gap: 5px;
@@ -227,12 +229,45 @@
   <!-- HOME -->
   <div id="scr-home" class="screen">
     <div class="topbar">
-      <div class="brand">kelime<span>ce</span></div>
+      <div class="brand"><svg class="brand-bird" width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><circle cx="9" cy="7" r="2.6" fill="#ff8fa3"/><circle cx="16" cy="4.5" r="2.6" fill="#ffd166"/><circle cx="23" cy="7" r="2.6" fill="#5ec9c0"/><circle cx="16" cy="18.5" r="13" fill="#f4a950"/><circle cx="11" cy="16" r="2.9" fill="#2b2013"/><circle cx="12" cy="15" r="1" fill="#fff"/><circle cx="21" cy="16" r="2.9" fill="#2b2013"/><circle cx="22" cy="15" r="1" fill="#fff"/><path d="M16,20 L21.5,23.5 L16,27.5 L10.5,23.5 Z" fill="#e8622c"/><ellipse cx="7.5" cy="21" rx="2.4" ry="1.6" fill="#ff8fa3" opacity="0.65"/><ellipse cx="24.5" cy="21" rx="2.4" ry="1.6" fill="#ff8fa3" opacity="0.65"/></svg><b style="font-weight:inherit">kelime<span>ce</span></b></div>
       <div class="pills">
         <div class="pill static" id="pill-streak">🔥 0</div>
         <div class="pill" id="pill-lang" onclick="openLangModal()"></div>
       </div>
     </div>
+    <svg class="hero-illo" viewBox="0 0 360 252" role="img" aria-label="Kelime Kuşu büyük bir kitabın üzerinde">
+      <path d="M180,202 C134,186 84,188 40,201 L40,231 C84,218 134,216 180,232 Z" fill="#6366f1"/>
+      <path d="M180,202 C226,186 276,188 320,201 L320,231 C276,218 226,216 180,232 Z" fill="#6366f1"/>
+      <path d="M180,196 C138,182 92,184 50,196 L50,220 C92,208 138,206 180,220 Z" fill="#fffdf6" stroke="#e4d9c4" stroke-width="1"/>
+      <path d="M180,196 C222,182 268,184 310,196 L310,220 C268,208 222,206 180,220 Z" fill="#fffdf6" stroke="#e4d9c4" stroke-width="1"/>
+      <path d="M74,199 C104,191 138,190 166,198" fill="none" stroke="#ddd2ba" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M74,206 C104,198 138,197 166,205" fill="none" stroke="#ddd2ba" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M194,198 C222,190 256,191 286,199" fill="none" stroke="#ddd2ba" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M194,205 C222,197 256,198 286,206" fill="none" stroke="#ddd2ba" stroke-width="1.6" stroke-linecap="round"/>
+      <line x1="180" y1="196" x2="180" y2="220" stroke="#e4d9c4" stroke-width="1.4"/>
+      <g transform="rotate(-38 132 128)"><rect x="96" y="121" width="38" height="14" rx="7" fill="#ff8fa3"/><circle cx="104" cy="128" r="2.6" fill="#fff" opacity="0.75"/></g>
+      <g transform="rotate(-18 130 140)"><rect x="92" y="133" width="40" height="14" rx="7" fill="#ffd166"/><circle cx="100" cy="140" r="2.6" fill="#fff" opacity="0.75"/></g>
+      <g transform="rotate(4 132 154)"><rect x="94" y="147" width="38" height="14" rx="7" fill="#5ec9c0"/><circle cx="102" cy="154" r="2.6" fill="#fff" opacity="0.75"/></g>
+      <g transform="rotate(-24 168 64)"><rect x="163" y="48" width="10" height="22" rx="5" fill="#ff8fa3"/></g>
+      <rect x="175" y="42" width="10" height="24" rx="5" fill="#ffd166"/>
+      <g transform="rotate(24 192 64)"><rect x="187" y="48" width="10" height="22" rx="5" fill="#5ec9c0"/></g>
+      <path d="M166,182 L166,194" stroke="#c95f22" stroke-width="3" stroke-linecap="round"/>
+      <path d="M194,182 L194,194" stroke="#c95f22" stroke-width="3" stroke-linecap="round"/>
+      <ellipse cx="180" cy="132" rx="55" ry="51" fill="#f4a950"/>
+      <ellipse cx="180" cy="151" rx="33" ry="26" fill="#fbd9a0"/>
+      <g transform="rotate(12 219 158)"><rect x="211" y="146" width="9" height="22" rx="4.5" fill="#ff8fa3"/></g>
+      <g transform="rotate(24 228 154)"><rect x="221" y="142" width="9" height="22" rx="4.5" fill="#ffd166"/></g>
+      <g transform="rotate(36 236 148)"><rect x="230" y="136" width="9" height="22" rx="4.5" fill="#5ec9c0"/></g>
+      <ellipse cx="219" cy="130" rx="15" ry="28" fill="#d9722a" transform="rotate(-16 219 130)"/>
+      <circle cx="161" cy="115" r="7" fill="#2b2013"/><circle cx="163.5" cy="112.5" r="2.4" fill="#fff"/>
+      <circle cx="199" cy="115" r="7" fill="#2b2013"/><circle cx="201.5" cy="112.5" r="2.4" fill="#fff"/>
+      <path d="M180,123 L193,131.5 L180,141 L167,131.5 Z" fill="#e8622c"/>
+      <path d="M167,131.5 L193,131.5 L180,141 Z" fill="#d9541f"/>
+      <ellipse cx="147" cy="137" rx="8.5" ry="5.5" fill="#ff8fa3" opacity="0.55"/>
+      <ellipse cx="213" cy="137" rx="8.5" ry="5.5" fill="#ff8fa3" opacity="0.55"/>
+      <rect x="158" y="192" width="16" height="6" rx="3" fill="#e8622c"/>
+      <rect x="186" y="192" width="16" height="6" rx="3" fill="#e8622c"/>
+    </svg>
     <div class="stat-row">
       <div class="stat"><div class="num" id="st-level">1</div><div class="lbl">Seviye</div></div>
       <div class="stat"><div class="num" id="st-learned">0</div><div class="lbl">Öğrenilen</div></div>
