@@ -254,7 +254,7 @@
       </div>
     </div>
     <div class="mece-bubble" id="mece-bubble"></div>
-    <svg class="hero-illo" viewBox="0 0 360 252" role="img" aria-label="Mece büyük bir kitabın üzerinde">
+    <svg class="hero-illo" viewBox="0 0 360 252" role="img" aria-label="Mece büyük bir kitabın üzerinde" onclick="showFeathers()" style="cursor:pointer">
       <path d="M180,202 C134,186 84,188 40,201 L40,231 C84,218 134,216 180,232 Z" fill="#6366f1"/>
       <path d="M180,202 C226,186 276,188 320,201 L320,231 C276,218 226,216 180,232 Z" fill="#6366f1"/>
       <path d="M180,196 C138,182 92,184 50,196 L50,220 C92,208 138,206 180,220 Z" fill="#fffdf6" stroke="#e4d9c4" stroke-width="1"/>
@@ -264,9 +264,7 @@
       <path d="M194,198 C222,190 256,191 286,199" fill="none" stroke="#ddd2ba" stroke-width="1.6" stroke-linecap="round"/>
       <path d="M194,205 C222,197 256,198 286,206" fill="none" stroke="#ddd2ba" stroke-width="1.6" stroke-linecap="round"/>
       <line x1="180" y1="196" x2="180" y2="220" stroke="#e4d9c4" stroke-width="1.4"/>
-      <g transform="rotate(-38 132 128)"><rect x="96" y="121" width="38" height="14" rx="7" fill="#ff8fa3"/><circle cx="104" cy="128" r="2.6" fill="#fff" opacity="0.75"/></g>
-      <g transform="rotate(-18 130 140)"><rect x="92" y="133" width="40" height="14" rx="7" fill="#ffd166"/><circle cx="100" cy="140" r="2.6" fill="#fff" opacity="0.75"/></g>
-      <g transform="rotate(4 132 154)"><rect x="94" y="147" width="38" height="14" rx="7" fill="#5ec9c0"/><circle cx="102" cy="154" r="2.6" fill="#fff" opacity="0.75"/></g>
+      <g id="mece-tail"></g>
       <g transform="rotate(-24 168 64)"><rect x="163" y="48" width="10" height="22" rx="5" fill="#ff8fa3"/></g>
       <rect x="175" y="42" width="10" height="24" rx="5" fill="#ffd166"/>
       <g transform="rotate(24 192 64)"><rect x="187" y="48" width="10" height="22" rx="5" fill="#5ec9c0"/></g>
@@ -1032,6 +1030,31 @@ function birdFace(mood, size){
     + "<ellipse cx='7.5' cy='21' rx='2.4' ry='1.6' fill='#ff8fa3' opacity='0.65'/><ellipse cx='24.5' cy='21' rx='2.4' ry='1.6' fill='#ff8fa3' opacity='0.65'/>"
     + extra + "</svg>";
 }
+/* Tüy koleksiyonu: Mece 3 tüyle başlar, her 20 öğrenilen kelime kuyruğa 1 tüy ekler (maks 12).
+   Rozet/puan yerine kuşun kendisi zenginleşir — kalıcı, yarışsız ilerleme. */
+const FEATHER_BASE = 3, FEATHER_PER = 20, FEATHER_MAX = 12;
+const FEATHER_COLORS = ["#ff8fa3","#ffd166","#5ec9c0"];
+function featherCount(p){ return Math.min(FEATHER_MAX, FEATHER_BASE + Math.floor(p.learned.length / FEATHER_PER)); }
+function renderMeceTail(p){
+  const n = featherCount(p);
+  /* Yelpaze: tüyler -78° (yukarı) ile +12° (aşağı) arasında eşit dağılır; 3 tüyde orijinal duruş korunur */
+  const a0 = n<=3 ? -40 : -78, a1 = n<=3 ? 5 : 12;
+  let html = "";
+  for(let i=0;i<n;i++){
+    const a = n===1 ? a0 : a0 + (a1-a0)*i/(n-1);
+    const c = FEATHER_COLORS[i % FEATHER_COLORS.length];
+    html += `<g transform="rotate(${a.toFixed(1)} 136 140)"><rect x="92" y="133" width="40" height="14" rx="7" fill="${c}"/><circle cx="100" cy="140" r="2.6" fill="#fff" opacity="0.75"/></g>`;
+  }
+  $("mece-tail").innerHTML = html;
+}
+function showFeathers(){
+  const p = P(), n = featherCount(p);
+  const kalan = FEATHER_PER - (p.learned.length % FEATHER_PER);
+  const sub = n>=FEATHER_MAX
+    ? `${p.learned.length} kelime öğrendin ve kuyruğum tamamen doldu. Sen bir efsanesin!`
+    : `Şu an ${n} tüyüm var (${p.learned.length} kelime). ${kalan} kelime daha öğrenirsen yeni bir tüy takıyorum!`;
+  showMotiv2("🪶","Mece'nin tüyleri", sub, null);
+}
 /* Ana sayfa konuşma balonu: duruma göre (kutlama > özlem > seri > günün lafı) */
 const MECE_HI = [
   "Bugün 10 kelime, yarın koca bir cümle. Hadi bakalım!",
@@ -1069,6 +1092,7 @@ function showHome(){
   const tc = Object.keys(toughOf(p)).length;
   $("review-desc").textContent = tc ? `Zorlandığın ${tc} kelime seni bekliyor 💪` : "Öğrendiklerin kalıcı mı? Kendini sına";
   $("mece-bubble").textContent = meceLine(p);
+  renderMeceTail(p);
   /* Haftalık sürpriz doğrulama quizi */
   const verifyDue = p.known.length>=5 && (!p.lastVerify || Date.now()-p.lastVerify > 7*86400000);
   $("verify-card").style.display = verifyDue ? "flex" : "none";
@@ -1260,7 +1284,9 @@ function finishQuiz(){
   const lg = logDay(p);
   lg.q += total; lg.ok += ok;
   if(quiz.opts.markLearned){
+    const before = featherCount(p);
     quiz.correct.forEach(wi=>{ if(!p.learned.includes(wi)){ p.learned.push(wi); lg.l++; } });
+    if(featherCount(p) > before) extra += " 🪶 Yeni tüy! Mece'nin kuyruğu zenginleşti — ana sayfada bir bak.";
   }
   if(quiz.opts.review){
     quiz.wrong.forEach(wi=>{ p.learned = p.learned.filter(x=>x!==wi); });
