@@ -176,6 +176,10 @@
   .modal { background: var(--card); border-radius: 18px; padding: 22px; width: 100%; max-width: 380px; }
   .motiv-pop { animation: popIn .35s cubic-bezier(.34,1.56,.64,1); }
   @keyframes popIn { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: scale(1); } }
+  .speak-btn { background: var(--accent-soft); color: var(--accent); border: none; border-radius: 9px;
+    padding: 5px 12px; cursor: pointer; font-size: 14px; font-family: inherit; font-weight: 600; }
+  .speak-btn:hover { filter: brightness(.95); }
+  .speak-btn.mini { padding: 2px 8px; font-size: 13px; margin-left: 6px; }
 </style>
 </head>
 <body>
@@ -241,6 +245,11 @@
       </div>
       <div class="progress-wrap" style="margin-top:10px"><div class="progress-bar" id="home-level-bar" style="width:0%"></div></div>
     </div>
+    <div class="menu-card" id="verify-card" style="display:none;border-color:var(--amber)" onclick="startVerify()">
+      <div class="ico" style="background:var(--amber-soft)">🎯</div>
+      <div><div class="tt">Doğrulama Quizi</div><div class="dd">"Biliyorum" dediklerinden 5 soru — hodri meydan</div></div>
+      <div class="arrow">›</div>
+    </div>
     <div class="menu-card" onclick="startDaily()">
       <div class="ico">📅</div>
       <div><div class="tt">Günlük Kelimeler</div><div class="dd" id="daily-desc">Bugünün 10 kelimesi seni bekliyor</div></div>
@@ -270,6 +279,7 @@
     <div class="card">
       <p class="sub" style="text-align:center;margin-bottom:6px">Bu kelimeyi biliyor musun?</p>
       <div class="bigword" id="daily-word"></div>
+      <div style="text-align:center;margin-top:10px"><button class="speak-btn" onclick="speakDaily()">🔊 Dinle</button></div>
       <div class="meaning" id="daily-meaning" style="visibility:hidden">·</div>
       <div class="know-btns">
         <button class="btn green-outline" onclick="dailyKnow(true)">✓ Biliyorum</button>
@@ -295,6 +305,7 @@
     <div class="card">
       <p class="sub" style="text-align:center;margin-bottom:6px" id="quiz-prompt"></p>
       <div class="bigword" id="quiz-word" style="font-size:28px"></div>
+      <div style="text-align:center;margin-top:10px;display:none" id="quiz-speak-wrap"><button class="speak-btn" onclick="speakQuiz()">🔊 Dinle</button></div>
       <div id="quiz-opts" style="margin-top:18px"></div>
       <div id="quiz-type-area" style="margin-top:18px;display:none">
         <input type="text" id="quiz-input" placeholder="Cevabını yaz..." autocomplete="off">
@@ -743,7 +754,7 @@ let S = null;
 function loadState(){ try { S = JSON.parse(localStorage.getItem("kelimece_v4")); } catch(e){ S=null; } }
 function saveState(){ localStorage.setItem("kelimece_v4", JSON.stringify(S)); }
 function P(){ return S.langs[S.activeLang]; }
-function newProfile(level){ return { level, known:[], learned:[], streak:0, lastStreakDay:null, daily:null }; }
+function newProfile(level){ return { level, known:[], learned:[], streak:0, lastStreakDay:null, daily:null, lastVerify:0 }; }
 function isDone(p,i){ return p.learned.includes(i)||p.known.includes(i); }
 
 /* ============ ONBOARDING ============ */
@@ -795,9 +806,12 @@ const MOTIV = [
 let motivCb = null;
 function showMotiv(passedLevel, cb){
   const m = MOTIV[Math.min(passedLevel-1, MOTIV.length-1)];
-  $("motiv-emoji").textContent = m[0];
-  $("motiv-text").textContent = m[1];
-  $("motiv-sub").textContent = m[2];
+  showMotiv2(m[0], m[1], m[2], cb);
+}
+function showMotiv2(emoji, text, sub, cb){
+  $("motiv-emoji").textContent = emoji;
+  $("motiv-text").textContent = text;
+  $("motiv-sub").textContent = sub;
   motivCb = cb;
   $("motiv-modal").classList.add("open");
 }
@@ -871,6 +885,13 @@ function showHome(){
   if(d && d.date===today() && d.quizDone) $("daily-desc").textContent = "Bugünü tamamladın ✓ — istersen tekrar bak";
   else if(d && d.date===today()) $("daily-desc").textContent = "Bugünün kelimeleri hazır, quiz seni bekliyor";
   else $("daily-desc").textContent = "Bugünün 10 kelimesi seni bekliyor";
+  /* Haftalık sürpriz doğrulama quizi */
+  const verifyDue = p.known.length>=5 && (!p.lastVerify || Date.now()-p.lastVerify > 7*86400000);
+  $("verify-card").style.display = verifyDue ? "flex" : "none";
+  if(verifyDue && !window._verifyPrompted){
+    window._verifyPrompted = true;
+    setTimeout(()=>showMotiv2("🎯","Sürpriz Doğrulama Quizi!","\"Biliyorum\" dediğin kelimelerden 5 soru geliyor... Bakalım gerçekten biliyor musun?", startVerify), 600);
+  }
   show("scr-home");
 }
 
@@ -934,7 +955,7 @@ function finishDailySelection(){
 }
 function renderStudy(words){
   $("study-list").innerHTML = words.map(i=>
-    `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))}</span><span class="m">${esc(wTr(i))}</span></div>`).join("");
+    `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))}<button class="speak-btn mini" onclick="speakIdx(${i})">🔊</button></span><span class="m">${esc(wTr(i))}</span></div>`).join("");
   show("scr-study");
 }
 function startDailyQuiz(){
@@ -961,6 +982,7 @@ function renderQuizQ(){
   $("quiz-opts").innerHTML = "";
   $("quiz-type-area").style.display = "none";
   $("quiz-input").value = "";
+  $("quiz-speak-wrap").style.display = q.type==="mc" ? "block" : "none";
 
   if(q.type==="mc"){
     $("quiz-prompt").textContent = "Bu kelimenin Türkçesi ne?";
@@ -1032,6 +1054,13 @@ function finishQuiz(){
     quiz.wrong.forEach(wi=>{ p.learned = p.learned.filter(x=>x!==wi); });
     if(quiz.wrong.length) extra = ` Yanlış yaptığın ${quiz.wrong.length} kelime "öğrenilenler"den çıkarıldı, tekrar karşına çıkacak.`;
   }
+  if(quiz.opts.verify){
+    quiz.wrong.forEach(wi=>{ p.known = p.known.filter(x=>x!==wi); });
+    p.lastVerify = Date.now();
+    extra = quiz.wrong.length
+      ? ` Bilemediğin ${quiz.wrong.length} kelime "biliyorum" listesinden çıkarıldı, günlük kelimelerde tekrar karşına çıkacak.`
+      : " Hepsini gerçekten biliyormuşsun, helal olsun!";
+  }
   if(quiz.opts.daily){
     p.daily.quizDone = true;
     const t = today(), y = yesterday();
@@ -1096,7 +1125,7 @@ function showLevelDetail(lv){
     let tag = "";
     if(p.learned.includes(i)) tag = `<span class="tag learned">öğrenildi</span>`;
     else if(p.known.includes(i)) tag = `<span class="tag known">biliyor</span>`;
-    return `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))}${tag}</span><span class="m">${esc(wTr(i))}</span></div>`;
+    return `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))}<button class="speak-btn mini" onclick="speakIdx(${i})">🔊</button>${tag}</span><span class="m">${esc(wTr(i))}</span></div>`;
   }).join("");
   show("scr-leveldetail");
 }
@@ -1130,7 +1159,7 @@ function learnedTab(mode){
     return;
   }
   $("learned-list").innerHTML = list.slice().sort((a,b)=>a-b).map(i=>
-    `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))} <span class="tag ${mode==="learned"?"learned":"known"}">S${levelOf(i)}</span></span><span class="m">${esc(wTr(i))}</span></div>`).join("");
+    `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))}<button class="speak-btn mini" onclick="speakIdx(${i})">🔊</button> <span class="tag ${mode==="learned"?"learned":"known"}">S${levelOf(i)}</span></span><span class="m">${esc(wTr(i))}</span></div>`).join("");
 }
 
 /* ============ DİL DEĞİŞTİRME ============ */
@@ -1148,6 +1177,27 @@ function switchLang(k){
   closeLangModal();
   if(S.langs[k]){ S.activeLang = k; saveState(); showHome(); }
   else { S.activeLang = k; saveState(); startPlacement(k); }
+}
+
+/* ============ SESLİ TELAFFUZ ============ */
+const TTS_LANG = { en:"en-GB", de:"de-DE", es:"es-ES", fr:"fr-FR", it:"it-IT" };
+function speak(text, lang){
+  if(!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = TTS_LANG[lang || S.activeLang];
+  u.rate = 0.9;
+  speechSynthesis.speak(u);
+}
+function speakIdx(i){ speak(wFor(i, S.activeLang)); }
+function speakDaily(){ if(dailySel) speakIdx(dailySel.queue[dailySel.pos]); }
+function speakQuiz(){ if(quiz) speakIdx(quiz.qs[quiz.i].wi); }
+
+/* ============ DOĞRULAMA QUİZİ ============ */
+function startVerify(){
+  const p = P();
+  if(p.known.length < 5){ alert("Bunun için en az 5 tane 'biliyorum' dediğin kelime olmalı."); return; }
+  quizStart(sample(p.known, 5), { verify:true });
 }
 
 /* ============ BAŞLANGIÇ ============ */
