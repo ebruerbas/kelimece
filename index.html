@@ -7,7 +7,8 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='9' cy='7' r='2.6' fill='%23ff8fa3'/%3E%3Ccircle cx='16' cy='4.5' r='2.6' fill='%23ffd166'/%3E%3Ccircle cx='23' cy='7' r='2.6' fill='%235ec9c0'/%3E%3Ccircle cx='16' cy='18.5' r='13' fill='%23f4a950'/%3E%3Ccircle cx='11' cy='16' r='2.9' fill='%232b2013'/%3E%3Ccircle cx='12' cy='15' r='1' fill='%23fff'/%3E%3Ccircle cx='21' cy='16' r='2.9' fill='%232b2013'/%3E%3Ccircle cx='22' cy='15' r='1' fill='%23fff'/%3E%3Cpath d='M16,20 L21.5,23.5 L16,27.5 L10.5,23.5 Z' fill='%23e8622c'/%3E%3Cellipse cx='7.5' cy='21' rx='2.4' ry='1.6' fill='%23ff8fa3' opacity='0.65'/%3E%3Cellipse cx='24.5' cy='21' rx='2.4' ry='1.6' fill='%23ff8fa3' opacity='0.65'/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#fafaf9">
+<meta name="theme-color" content="#fafaf9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#171512" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Kelimece">
@@ -28,6 +29,27 @@
     --amber: #f59e0b;
     --amber-soft: #fffbeb;
   }
+  /* Karanlık tema: sistem tercihini izler (Faz 3) */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #171512;
+      --card: #201d19;
+      --border: #363129;
+      --text: #ece8e2;
+      --muted: #a19a90;
+      --accent: #818cf8;
+      --accent-soft: #272a45;
+      --mece: #f47b45;
+      --green: #34d399;
+      --green-soft: #112b21;
+      --red: #f87171;
+      --red-soft: #321919;
+      --amber: #fbbf24;
+      --amber-soft: #2e2510;
+    }
+    .btn.ghost:hover { background: #262320; }
+    .lang-opt:hover, .q-opt:hover { border-color: #4a453d; }
+  }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -41,9 +63,9 @@
   .screen.active { display: block; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-  h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
-  h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
-  .sub { color: var(--muted); font-size: 14.5px; line-height: 1.5; margin-top: 6px; }
+  h1 { font-size: 1.625rem; font-weight: 700; letter-spacing: -0.02em; }
+  h2 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); font-size: 0.9062rem; line-height: 1.5; margin-top: 6px; }
 
   .card {
     background: var(--card);
@@ -54,7 +76,7 @@
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     border: none; border-radius: 12px; cursor: pointer;
-    font-size: 15px; font-weight: 600; font-family: inherit;
+    font-size: 0.9375rem; font-weight: 600; font-family: inherit;
     padding: 13px 22px; transition: all .15s ease;
     background: var(--accent); color: #fff; width: 100%;
   }
@@ -66,51 +88,51 @@
   .btn.green { background: var(--green); }
   .btn.red-outline { background: var(--red-soft); color: var(--red); }
   .btn.green-outline { background: var(--green-soft); color: var(--green); }
-  .btn.small { width: auto; padding: 8px 14px; font-size: 13.5px; border-radius: 10px; }
+  .btn.small { width: auto; padding: 8px 14px; font-size: 0.8438rem; border-radius: 10px; }
 
   input[type="text"] {
-    width: 100%; padding: 13px 16px; font-size: 16px; font-family: inherit;
+    width: 100%; padding: 13px 16px; font-size: 1rem; font-family: inherit;
     border: 1.5px solid var(--border); border-radius: 12px; background: var(--card);
     outline: none; transition: border-color .15s;
   }
   input[type="text"]:focus { border-color: var(--accent); }
 
   /* onboarding */
-  .logo { font-size: 34px; font-weight: 800; letter-spacing: -0.03em; text-align: center; margin-top: 40px; }
+  .logo { font-size: 2.125rem; font-weight: 800; letter-spacing: -0.03em; text-align: center; margin-top: 40px; }
   .logo span { color: var(--mece); }
-  .tagline { text-align: center; color: var(--muted); font-size: 15px; margin: 8px 0 36px; }
+  .tagline { text-align: center; color: var(--muted); font-size: 0.9375rem; margin: 8px 0 36px; }
   .lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
   .lang-opt {
     display: flex; align-items: center; gap: 10px; padding: 14px 16px;
     background: var(--card); border: 1.5px solid var(--border); border-radius: 14px;
-    cursor: pointer; font-weight: 600; font-size: 15px; transition: all .15s;
+    cursor: pointer; font-weight: 600; font-size: 0.9375rem; transition: all .15s;
   }
   .lang-opt:hover { border-color: #c7c5c3; }
   .lang-opt.sel { border-color: var(--accent); background: var(--accent-soft); }
-  .lang-opt .flag { font-size: 22px; }
+  .lang-opt .flag { font-size: 1.375rem; }
 
   /* header */
   .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
-  .topbar .brand { display: flex; align-items: center; gap: 7px; font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
+  .topbar .brand { display: flex; align-items: center; gap: 7px; font-size: 1.1875rem; font-weight: 800; letter-spacing: -0.02em; }
   .topbar .brand span { color: var(--mece); }
   .brand-bird { flex-shrink: 0; display: block; }
   .hero-illo { display: block; width: 100%; max-width: 330px; margin: -4px auto 10px; }
-  .mece-bubble { position: relative; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 10px 14px; font-size: 13.5px; line-height: 1.45; max-width: 320px; margin: 0 auto; text-align: center; }
+  .mece-bubble { position: relative; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 10px 14px; font-size: 0.8438rem; line-height: 1.45; max-width: 320px; margin: 0 auto; text-align: center; }
   .mece-bubble::after { content: ""; position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%) rotate(45deg); width: 12px; height: 12px; background: var(--card); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
   .feedback .mim svg { vertical-align: -6px; margin-right: 6px; }
   .pills { display: flex; gap: 8px; align-items: center; }
   .pill {
     display: inline-flex; align-items: center; gap: 5px;
     background: var(--card); border: 1px solid var(--border); border-radius: 999px;
-    padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer;
+    padding: 9px 14px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; min-height: 38px;
   }
   .pill.static { cursor: default; }
 
   /* home */
   .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
   .stat { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; text-align: center; }
-  .stat .num { font-size: 22px; font-weight: 800; }
-  .stat .lbl { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .stat .num { font-size: 1.375rem; font-weight: 800; }
+  .stat .lbl { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
   .menu-card {
     display: flex; align-items: center; gap: 14px; padding: 18px;
     background: var(--card); border: 1px solid var(--border); border-radius: 16px;
@@ -119,38 +141,38 @@
   .menu-card:hover { border-color: var(--accent); }
   .menu-card .ico {
     width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center;
-    justify-content: center; font-size: 21px; background: var(--accent-soft); flex-shrink: 0;
+    justify-content: center; font-size: 1.3125rem; background: var(--accent-soft); flex-shrink: 0;
   }
-  .menu-card .tt { font-weight: 700; font-size: 15.5px; }
-  .menu-card .dd { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .menu-card .tt { font-weight: 700; font-size: 0.9688rem; }
+  .menu-card .dd { font-size: 0.8125rem; color: var(--muted); margin-top: 2px; }
   .menu-card .arrow { margin-left: auto; color: var(--muted); }
 
   .progress-wrap { background: var(--border); border-radius: 999px; height: 8px; overflow: hidden; }
   .progress-bar { background: var(--accent); height: 100%; border-radius: 999px; transition: width .4s ease; }
 
   /* word cards */
-  .bigword { font-size: 32px; font-weight: 800; letter-spacing: -0.02em; text-align: center; }
-  .meaning { text-align: center; font-size: 18px; color: var(--muted); margin-top: 8px; }
-  .counter { text-align: center; font-size: 13px; color: var(--muted); font-weight: 600; margin-bottom: 14px; }
+  .bigword { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; text-align: center; }
+  .meaning { text-align: center; font-size: 1.125rem; color: var(--muted); margin-top: 8px; }
+  .counter { text-align: center; font-size: 0.8125rem; color: var(--muted); font-weight: 600; margin-bottom: 14px; }
   .know-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 22px; }
 
   /* quiz */
   .q-opt {
     display: block; width: 100%; text-align: left; padding: 14px 16px; margin-top: 10px;
     background: var(--card); border: 1.5px solid var(--border); border-radius: 13px;
-    font-size: 15.5px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all .12s;
+    font-size: 0.9688rem; font-weight: 600; font-family: inherit; cursor: pointer; transition: all .12s;
   }
   .q-opt:hover { border-color: #c7c5c3; }
   .q-opt.correct { border-color: var(--green); background: var(--green-soft); }
   .q-opt.wrong { border-color: var(--red); background: var(--red-soft); }
-  .feedback { text-align: center; font-weight: 700; margin-top: 14px; min-height: 22px; font-size: 15px; }
+  .feedback { text-align: center; font-weight: 700; margin-top: 14px; min-height: 22px; font-size: 0.9375rem; }
   .feedback.ok { color: var(--green); animation: popIn .35s ease; }
   .feedback.no { color: var(--red); animation: popIn .35s ease; }
   .q-opt.correct { animation: popIn .3s ease; }
   .q-opt.wrong { animation: shakeX .3s ease; }
   @keyframes popIn { 0% { transform: scale(.5); opacity: 0; } 60% { transform: scale(1.12); } 100% { transform: scale(1); opacity: 1; } }
   @keyframes shakeX { 0%, 100% { transform: none; } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
-  .level-tile .lnm { font-size: 10.5px; color: var(--muted); margin: 1px 0 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .level-tile .lnm { font-size: 0.6562rem; color: var(--muted); margin: 1px 0 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 
   /* levels */
@@ -162,33 +184,33 @@
   .level-tile:hover { border-color: var(--accent); }
   .level-tile.locked { opacity: .45; cursor: default; }
   .level-tile.locked:hover { border-color: var(--border); }
-  .level-tile .lv { font-weight: 800; font-size: 17px; }
-  .level-tile .cnt { font-size: 11.5px; color: var(--muted); margin: 6px 0 8px; }
+  .level-tile .lv { font-weight: 800; font-size: 1.0625rem; }
+  .level-tile .cnt { font-size: 0.7188rem; color: var(--muted); margin: 6px 0 8px; }
   .level-tile.current { border-color: var(--accent); background: var(--accent-soft); }
 
   .word-row {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 12px 4px; border-bottom: 1px solid var(--border); font-size: 15px;
+    padding: 12px 4px; border-bottom: 1px solid var(--border); font-size: 0.9375rem;
   }
   .word-row:last-child { border-bottom: none; }
   .word-row .w { font-weight: 700; }
   .word-row .m { color: var(--muted); }
-  .tag { font-size: 11px; font-weight: 700; border-radius: 999px; padding: 3px 9px; margin-left: 8px; }
+  .tag { font-size: 0.6875rem; font-weight: 700; border-radius: 999px; padding: 3px 9px; margin-left: 8px; }
   .tag.learned { background: var(--green-soft); color: var(--green); }
   .tag.known { background: var(--amber-soft); color: var(--amber); }
 
-  .back { background: none; border: none; color: var(--muted); font-size: 14px; font-weight: 600;
+  .back { background: none; border: none; color: var(--muted); font-size: 0.875rem; font-weight: 600;
     cursor: pointer; font-family: inherit; padding: 0; margin-bottom: 16px; display: inline-flex; align-items: center; gap: 5px; }
   .back:hover { color: var(--text); }
 
-  .result-emoji { font-size: 52px; text-align: center; }
-  .result-score { font-size: 30px; font-weight: 800; text-align: center; margin-top: 10px; }
+  .result-emoji { font-size: 3.25rem; text-align: center; }
+  .result-score { font-size: 1.875rem; font-weight: 800; text-align: center; margin-top: 10px; }
   .divider { height: 1px; background: var(--border); margin: 16px 0; }
   .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
-  .tab { padding: 8px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 600;
+  .tab { padding: 8px 16px; border-radius: 999px; font-size: 0.8438rem; font-weight: 600;
     background: var(--card); border: 1px solid var(--border); cursor: pointer; font-family: inherit; }
-  .tab.active { background: var(--text); color: #fff; border-color: var(--text); }
-  .empty { text-align: center; color: var(--muted); padding: 40px 0; font-size: 14.5px; }
+  .tab.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .empty { text-align: center; color: var(--muted); padding: 40px 0; font-size: 0.9062rem; }
   .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none;
     align-items: center; justify-content: center; z-index: 10; padding: 20px; }
   .modal-bg.open { display: flex; }
@@ -196,9 +218,9 @@
   .motiv-pop { animation: popIn .35s cubic-bezier(.34,1.56,.64,1); }
   @keyframes popIn { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: scale(1); } }
   .speak-btn { background: var(--accent-soft); color: var(--accent); border: none; border-radius: 9px;
-    padding: 5px 12px; cursor: pointer; font-size: 14px; font-family: inherit; font-weight: 600; }
+    padding: 5px 14px; min-height: 44px; min-width: 44px; cursor: pointer; font-size: 0.875rem; font-family: inherit; font-weight: 600; }
   .speak-btn:hover { filter: brightness(.95); }
-  .speak-btn.mini { padding: 2px 8px; font-size: 13px; margin-left: 6px; }
+  .speak-btn.mini { padding: 6px 10px; min-height: 38px; min-width: 38px; font-size: 0.8125rem; margin-left: 4px; }
 </style>
 </head>
 <body>
@@ -292,33 +314,33 @@
     </div>
     <div class="card" style="margin-bottom:18px">
       <div style="display:flex;justify-content:space-between;align-items:baseline">
-        <strong style="font-size:14px" id="home-level-label"></strong>
-        <span style="font-size:13px;color:var(--muted)" id="home-level-count"></span>
+        <strong style="font-size: 0.875rem" id="home-level-label"></strong>
+        <span style="font-size: 0.8125rem;color:var(--muted)" id="home-level-count"></span>
       </div>
       <div class="progress-wrap" style="margin-top:10px"><div class="progress-bar" id="home-level-bar" style="width:0%"></div></div>
     </div>
     <div class="menu-card" id="verify-card" style="display:none;border-color:var(--amber)" onclick="startVerify()">
-      <div class="ico" style="background:var(--amber-soft)">🎯</div>
+      <div class="ico" style="background:var(--amber-soft)" aria-hidden="true">🎯</div>
       <div><div class="tt">Doğrulama Quizi</div><div class="dd">"Biliyorum" dediklerinden 5 soru — hodri meydan</div></div>
       <div class="arrow">›</div>
     </div>
     <div class="menu-card" onclick="startDaily()">
-      <div class="ico">📅</div>
+      <div class="ico" aria-hidden="true">📅</div>
       <div><div class="tt">Günlük Kelimeler</div><div class="dd" id="daily-desc">Bugünün 10 kelimesi seni bekliyor</div></div>
       <div class="arrow">›</div>
     </div>
     <div class="menu-card" onclick="showLevels()">
-      <div class="ico">🪜</div>
+      <div class="ico" aria-hidden="true">🪜</div>
       <div><div class="tt">Seviye Seviye</div><div class="dd">Tüm seviyeleri keşfet, dilediğinden çalış</div></div>
       <div class="arrow">›</div>
     </div>
     <div class="menu-card" onclick="showLearned()">
-      <div class="ico">📚</div>
+      <div class="ico" aria-hidden="true">📚</div>
       <div><div class="tt">Kelimelerim</div><div class="dd">Öğrendiğin ve bildiğin kelimeler</div></div>
       <div class="arrow">›</div>
     </div>
     <div class="menu-card" onclick="startReview()">
-      <div class="ico">🔁</div>
+      <div class="ico" aria-hidden="true">🔁</div>
       <div><div class="tt">Tekrar Quizi</div><div class="dd" id="review-desc">Öğrendiklerin kalıcı mı? Kendini sına</div></div>
       <div class="arrow">›</div>
     </div>
@@ -327,7 +349,7 @@
       <button class="btn ghost small" onclick="$('import-file').click()">⬆ Geri Yükle</button>
       <input type="file" id="import-file" accept=".json,application/json" style="display:none" onchange="importBackup(this)">
     </div>
-    <p class="sub" style="text-align:center;font-size:12px;margin-top:8px">İlerlemen bu cihazda saklanır — arada bir yedek almak iyi fikir.</p>
+    <p class="sub" style="text-align:center;font-size: 0.75rem;margin-top:8px">İlerlemen bu cihazda saklanır — arada bir yedek almak iyi fikir.</p>
   </div>
 
   <!-- DAILY: know/don't know -->
@@ -337,7 +359,7 @@
     <div class="card">
       <p class="sub" style="text-align:center;margin-bottom:6px">Bu kelimeyi biliyor musun?</p>
       <div class="bigword" id="daily-word"></div>
-      <div style="text-align:center;margin-top:10px"><button class="speak-btn" onclick="speakDaily()">🔊 Dinle</button></div>
+      <div style="text-align:center;margin-top:10px"><button class="speak-btn" aria-label="Telaffuzu dinle" onclick="speakDaily()">🔊 Dinle</button></div>
       <div class="meaning" id="daily-meaning" style="visibility:hidden">·</div>
       <div class="know-btns">
         <button class="btn green-outline" onclick="dailyKnow(true)">✓ Biliyorum</button>
@@ -362,8 +384,8 @@
     <div class="progress-wrap" style="margin-bottom:22px"><div class="progress-bar" id="quiz-progress" style="width:0%"></div></div>
     <div class="card">
       <p class="sub" style="text-align:center;margin-bottom:6px" id="quiz-prompt"></p>
-      <div class="bigword" id="quiz-word" style="font-size:28px"></div>
-      <div style="text-align:center;margin-top:10px;display:none" id="quiz-speak-wrap"><button class="speak-btn" onclick="speakQuiz()">🔊 Dinle</button></div>
+      <div class="bigword" id="quiz-word" style="font-size: 1.75rem"></div>
+      <div style="text-align:center;margin-top:10px;display:none" id="quiz-speak-wrap"><button class="speak-btn" aria-label="Telaffuzu dinle" onclick="speakQuiz()">🔊 Dinle</button></div>
       <div id="quiz-opts" style="margin-top:18px"></div>
       <div id="quiz-type-area" style="margin-top:18px;display:none">
         <input type="text" id="quiz-input" placeholder="Cevabını yaz..." autocomplete="off">
@@ -420,8 +442,8 @@
   <!-- MOTİVASYON POP-UP -->
   <div class="modal-bg" id="motiv-modal">
     <div class="modal motiv-pop" style="text-align:center">
-      <div style="font-size:48px" id="motiv-emoji"></div>
-      <h2 id="motiv-text" style="margin-top:12px;font-size:22px"></h2>
+      <div style="font-size: 3rem" id="motiv-emoji"></div>
+      <h2 id="motiv-text" style="margin-top:12px;font-size: 1.375rem"></h2>
       <p class="sub" id="motiv-sub"></p>
       <div style="margin-top:18px"><button class="btn" id="motiv-btn">Devam 💪</button></div>
     </div>
@@ -1168,7 +1190,7 @@ function finishDailySelection(){
 }
 function renderStudy(words){
   $("study-list").innerHTML = words.map(i=>
-    `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))}<button class="speak-btn mini" onclick="speakIdx(${i})">🔊</button></span><span class="m">${esc(wTr(i))}</span></div>`).join("");
+    `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))}<button class="speak-btn mini" aria-label="Telaffuzu dinle" onclick="speakIdx(${i})">🔊</button></span><span class="m">${esc(wTr(i))}</span></div>`).join("");
   show("scr-study");
 }
 function startDailyQuiz(){
@@ -1203,7 +1225,7 @@ function renderQuizQ(){
   $("quiz-type-area").style.display = "none";
   $("quiz-input").value = "";
   $("quiz-speak-wrap").style.display = q.type==="mc" ? "block" : "none";
-  $("quiz-word").style.fontSize = "28px";
+  $("quiz-word").style.fontSize = "1.75rem";
   $("quiz-word").style.fontWeight = "800";
 
   if(q.type==="mc"){
@@ -1224,7 +1246,7 @@ function renderQuizQ(){
     const [sentence, trSentence] = SENTENCES[wTr(q.wi)][lang];
     $("quiz-prompt").textContent = `Boşluğu ${LANGS[lang].name} olarak doldur — Türkçesi: "${trSentence}"`;
     $("quiz-word").innerHTML = esc(sentence).replace("___", '<span style="color:var(--accent)">___</span>');
-    $("quiz-word").style.fontSize = "19px";
+    $("quiz-word").style.fontSize = "1.1875rem";
     $("quiz-word").style.fontWeight = "600";
     $("quiz-type-area").style.display = "block";
     setTimeout(()=>$("quiz-input").focus(), 50);
@@ -1372,8 +1394,8 @@ function showLevelDetail(lv){
     if(p.learned.includes(i)) tag = `<span class="tag learned">öğrenildi</span>`;
     else if(p.known.includes(i)) tag = `<span class="tag known">biliyor</span>`;
     /* Anlam sadece öğrenilmiş/bilinen kelimelerde açık — liste kopya kağıdına dönmesin */
-    const meaning = isDone(p,i) ? esc(wTr(i)) : `<span style="letter-spacing:2px;color:var(--muted)" title="Quiz yaparak aç">•••</span>`;
-    return `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))}<button class="speak-btn mini" onclick="speakIdx(${i})">🔊</button>${tag}</span><span class="m">${meaning}</span></div>`;
+    const meaning = isDone(p,i) ? esc(wTr(i)) : `<span style="letter-spacing:2px;color:var(--muted)" role="img" aria-label="Anlamı gizli — quiz yaparak aç" title="Quiz yaparak aç">•••</span>`;
+    return `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))}<button class="speak-btn mini" aria-label="Telaffuzu dinle" onclick="speakIdx(${i})">🔊</button>${tag}</span><span class="m">${meaning}</span></div>`;
   }).join("");
   show("scr-leveldetail");
 }
@@ -1415,7 +1437,7 @@ function learnedTab(mode){
     return;
   }
   $("learned-list").innerHTML = list.slice().sort((a,b)=>a-b).map(i=>
-    `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))}<button class="speak-btn mini" onclick="speakIdx(${i})">🔊</button> <span class="tag ${mode==="learned"?"learned":"known"}">S${levelOf(i)}</span></span><span class="m">${esc(wTr(i))}</span></div>`).join("");
+    `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))}<button class="speak-btn mini" aria-label="Telaffuzu dinle" onclick="speakIdx(${i})">🔊</button> <span class="tag ${mode==="learned"?"learned":"known"}">S${levelOf(i)}</span></span><span class="m">${esc(wTr(i))}</span></div>`).join("");
 }
 
 /* ============ DİL DEĞİŞTİRME ============ */

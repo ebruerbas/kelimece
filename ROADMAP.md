@@ -22,10 +22,10 @@ Uygulamanın kimliği: oyunlaştırmaya kaçmadan "her gün 10 dakikaya değer" 
 
 ## Faz 3 — Platform cilası
 
-- [ ] Karanlık tema
-- [ ] Dokunma hedefleri 44pt (mini ses düğmeleri, üst haplar)
-- [ ] VoiceOver: 🔊 düğmelerine aria-label, ••• için erişilebilir metin
-- [ ] Dinamik yazı boyutuna saygı (px → rem geçişi)
+- [x] Karanlık tema
+- [x] Dokunma hedefleri 44pt (mini ses düğmeleri, üst haplar)
+- [x] VoiceOver: 🔊 düğmelerine aria-label, ••• için erişilebilir metin
+- [x] Dinamik yazı boyutuna saygı (px → rem geçişi)
 
 ## Faz 4 — Derinlik ve içerik
 
