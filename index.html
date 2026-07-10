@@ -1272,12 +1272,14 @@ function showLevelDetail(lv){
   const ws = levelWords(lv);
   const done = ws.filter(i=>isDone(p,i)).length;
   $("ld-title").textContent = `Seviye ${lv}`;
-  $("ld-sub").textContent = `${done}/${LEVEL_SIZE} kelime tamamlandı. Quiz yaparak kelimeleri "öğrenildi" işaretleyebilirsin.`;
+  $("ld-sub").textContent = `${done}/${LEVEL_SIZE} kelime tamamlandı. Anlamlar quiz yaptıkça açılır — hazır cevap yok!`;
   $("ld-list").innerHTML = ws.map(i=>{
     let tag = "";
     if(p.learned.includes(i)) tag = `<span class="tag learned">öğrenildi</span>`;
     else if(p.known.includes(i)) tag = `<span class="tag known">biliyor</span>`;
-    return `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))}<button class="speak-btn mini" onclick="speakIdx(${i})">🔊</button>${tag}</span><span class="m">${esc(wTr(i))}</span></div>`;
+    /* Anlam sadece öğrenilmiş/bilinen kelimelerde açık — liste kopya kağıdına dönmesin */
+    const meaning = isDone(p,i) ? esc(wTr(i)) : `<span style="letter-spacing:2px;color:var(--muted)" title="Quiz yaparak aç">•••</span>`;
+    return `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))}<button class="speak-btn mini" onclick="speakIdx(${i})">🔊</button>${tag}</span><span class="m">${meaning}</span></div>`;
   }).join("");
   show("scr-leveldetail");
 }
