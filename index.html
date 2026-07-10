@@ -15,6 +15,7 @@
     --text: #1c1917;
     --muted: #78716c;
     --accent: #6366f1;
+    --mece: #e8622c;
     --accent-soft: #eef2ff;
     --green: #10b981;
     --green-soft: #ecfdf5;
@@ -72,7 +73,7 @@
 
   /* onboarding */
   .logo { font-size: 34px; font-weight: 800; letter-spacing: -0.03em; text-align: center; margin-top: 40px; }
-  .logo span { color: var(--accent); }
+  .logo span { color: var(--mece); }
   .tagline { text-align: center; color: var(--muted); font-size: 15px; margin: 8px 0 36px; }
   .lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
   .lang-opt {
@@ -87,7 +88,7 @@
   /* header */
   .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
   .topbar .brand { display: flex; align-items: center; gap: 7px; font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
-  .topbar .brand span { color: var(--accent); }
+  .topbar .brand span { color: var(--mece); }
   .brand-bird { flex-shrink: 0; display: block; }
   .hero-illo { display: block; width: 100%; max-width: 330px; margin: -4px auto 10px; }
   .mece-bubble { position: relative; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 10px 14px; font-size: 13.5px; line-height: 1.45; max-width: 320px; margin: 0 auto; text-align: center; }
@@ -195,7 +196,7 @@
 
   <!-- ONBOARDING -->
   <div id="scr-onboard" class="screen">
-    <div class="logo">kelime<span>ce</span></div>
+    <div class="logo">keli<span>mece</span></div>
     <div class="tagline">Her gün 10 yeni kelime. Seviyene göre, dilediğin dilde.</div>
     <div class="card">
       <h2>Merhaba 👋</h2>
@@ -235,7 +236,7 @@
   <!-- HOME -->
   <div id="scr-home" class="screen">
     <div class="topbar">
-      <div class="brand"><svg class="brand-bird" width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><circle cx="9" cy="7" r="2.6" fill="#ff8fa3"/><circle cx="16" cy="4.5" r="2.6" fill="#ffd166"/><circle cx="23" cy="7" r="2.6" fill="#5ec9c0"/><circle cx="16" cy="18.5" r="13" fill="#f4a950"/><circle cx="11" cy="16" r="2.9" fill="#2b2013"/><circle cx="12" cy="15" r="1" fill="#fff"/><circle cx="21" cy="16" r="2.9" fill="#2b2013"/><circle cx="22" cy="15" r="1" fill="#fff"/><path d="M16,20 L21.5,23.5 L16,27.5 L10.5,23.5 Z" fill="#e8622c"/><ellipse cx="7.5" cy="21" rx="2.4" ry="1.6" fill="#ff8fa3" opacity="0.65"/><ellipse cx="24.5" cy="21" rx="2.4" ry="1.6" fill="#ff8fa3" opacity="0.65"/></svg><b style="font-weight:inherit">kelime<span>ce</span></b></div>
+      <div class="brand"><svg class="brand-bird" width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><circle cx="9" cy="7" r="2.6" fill="#ff8fa3"/><circle cx="16" cy="4.5" r="2.6" fill="#ffd166"/><circle cx="23" cy="7" r="2.6" fill="#5ec9c0"/><circle cx="16" cy="18.5" r="13" fill="#f4a950"/><circle cx="11" cy="16" r="2.9" fill="#2b2013"/><circle cx="12" cy="15" r="1" fill="#fff"/><circle cx="21" cy="16" r="2.9" fill="#2b2013"/><circle cx="22" cy="15" r="1" fill="#fff"/><path d="M16,20 L21.5,23.5 L16,27.5 L10.5,23.5 Z" fill="#e8622c"/><ellipse cx="7.5" cy="21" rx="2.4" ry="1.6" fill="#ff8fa3" opacity="0.65"/><ellipse cx="24.5" cy="21" rx="2.4" ry="1.6" fill="#ff8fa3" opacity="0.65"/></svg><b style="font-weight:inherit">keli<span>mece</span></b></div>
       <div class="pills">
         <div class="pill static" id="pill-streak">🔥 0</div>
         <div class="pill" id="pill-lang" onclick="openLangModal()"></div>
