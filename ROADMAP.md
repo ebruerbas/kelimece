@@ -30,7 +30,7 @@ Uygulamanın kimliği: oyunlaştırmaya kaçmadan "her gün 10 dakikaya değer" 
 ## Faz 4 — Derinlik ve içerik
 
 - [x] Mece tüy koleksiyonu (öğrenilen kelime = tüy; kalıcı, yarışsız ilerleme)
-- [ ] Örnek cümleleri İngilizce'de tüm seviyelere yay (diğer diller: kalite riski nedeniyle beklet)
+- [x] Örnek cümleleri İngilizce'de tüm seviyelere yay (diğer diller: kalite riski nedeniyle beklet)
 - [x] Dil bitirme finali + yeni dile davet
 - [x] Favori kelimeler
 - [x] İstatistik ekranı (Faz 1'deki kayıt biriktikten sonra)
