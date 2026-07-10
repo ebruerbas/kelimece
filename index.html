@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kelimece — Günlük Kelime Dağarcığı</title>
+<style>
+  :root {
+    --bg: #fafaf9;
+    --card: #ffffff;
+    --border: #e7e5e4;
+    --text: #1c1917;
+    --muted: #78716c;
+    --accent: #6366f1;
+    --accent-soft: #eef2ff;
+    --green: #10b981;
+    --green-soft: #ecfdf5;
+    --red: #ef4444;
+    --red-soft: #fef2f2;
+    --amber: #f59e0b;
+    --amber-soft: #fffbeb;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  .app { max-width: 540px; margin: 0 auto; padding: 24px 20px 80px; }
+  .screen { display: none; animation: fadeIn .25s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+  h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); font-size: 14.5px; line-height: 1.5; margin-top: 6px; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+  }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border: none; border-radius: 12px; cursor: pointer;
+    font-size: 15px; font-weight: 600; font-family: inherit;
+    padding: 13px 22px; transition: all .15s ease;
+    background: var(--accent); color: #fff; width: 100%;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:active { transform: scale(.98); }
+  .btn:disabled { opacity: .4; cursor: default; }
+  .btn.ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn.ghost:hover { background: #f5f5f4; filter: none; }
+  .btn.green { background: var(--green); }
+  .btn.red-outline { background: var(--red-soft); color: var(--red); }
+  .btn.green-outline { background: var(--green-soft); color: var(--green); }
+  .btn.small { width: auto; padding: 8px 14px; font-size: 13.5px; border-radius: 10px; }
+
+  input[type="text"] {
+    width: 100%; padding: 13px 16px; font-size: 16px; font-family: inherit;
+    border: 1.5px solid var(--border); border-radius: 12px; background: var(--card);
+    outline: none; transition: border-color .15s;
+  }
+  input[type="text"]:focus { border-color: var(--accent); }
+
+  /* onboarding */
+  .logo { font-size: 34px; font-weight: 800; letter-spacing: -0.03em; text-align: center; margin-top: 40px; }
+  .logo span { color: var(--accent); }
+  .tagline { text-align: center; color: var(--muted); font-size: 15px; margin: 8px 0 36px; }
+  .lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .lang-opt {
+    display: flex; align-items: center; gap: 10px; padding: 14px 16px;
+    background: var(--card); border: 1.5px solid var(--border); border-radius: 14px;
+    cursor: pointer; font-weight: 600; font-size: 15px; transition: all .15s;
+  }
+  .lang-opt:hover { border-color: #c7c5c3; }
+  .lang-opt.sel { border-color: var(--accent); background: var(--accent-soft); }
+  .lang-opt .flag { font-size: 22px; }
+
+  /* header */
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+  .topbar .brand { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
+  .topbar .brand span { color: var(--accent); }
+  .pills { display: flex; gap: 8px; align-items: center; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--card); border: 1px solid var(--border); border-radius: 999px;
+    padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .pill.static { cursor: default; }
+
+  /* home */
+  .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+  .stat { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; text-align: center; }
+  .stat .num { font-size: 22px; font-weight: 800; }
+  .stat .lbl { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .menu-card {
+    display: flex; align-items: center; gap: 14px; padding: 18px;
+    background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+    cursor: pointer; margin-bottom: 12px; transition: all .15s;
+  }
+  .menu-card:hover { border-color: var(--accent); }
+  .menu-card .ico {
+    width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center;
+    justify-content: center; font-size: 21px; background: var(--accent-soft); flex-shrink: 0;
+  }
+  .menu-card .tt { font-weight: 700; font-size: 15.5px; }
+  .menu-card .dd { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .menu-card .arrow { margin-left: auto; color: var(--muted); }
+
+  .progress-wrap { background: var(--border); border-radius: 999px; height: 8px; overflow: hidden; }
+  .progress-bar { background: var(--accent); height: 100%; border-radius: 999px; transition: width .4s ease; }
+
+  /* word cards */
+  .bigword { font-size: 32px; font-weight: 800; letter-spacing: -0.02em; text-align: center; }
+  .meaning { text-align: center; font-size: 18px; color: var(--muted); margin-top: 8px; }
+  .counter { text-align: center; font-size: 13px; color: var(--muted); font-weight: 600; margin-bottom: 14px; }
+  .know-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 22px; }
+
+  /* quiz */
+  .q-opt {
+    display: block; width: 100%; text-align: left; padding: 14px 16px; margin-top: 10px;
+    background: var(--card); border: 1.5px solid var(--border); border-radius: 13px;
+    font-size: 15.5px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all .12s;
+  }
+  .q-opt:hover { border-color: #c7c5c3; }
+  .q-opt.correct { border-color: var(--green); background: var(--green-soft); }
+  .q-opt.wrong { border-color: var(--red); background: var(--red-soft); }
+  .feedback { text-align: center; font-weight: 700; margin-top: 14px; min-height: 22px; font-size: 15px; }
+  .feedback.ok { color: var(--green); }
+  .feedback.no { color: var(--red); }
+
+  /* levels */
+  .level-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .level-tile {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 14px 10px; text-align: center; cursor: pointer; transition: all .15s;
+  }
+  .level-tile:hover { border-color: var(--accent); }
+  .level-tile.locked { opacity: .45; cursor: default; }
+  .level-tile.locked:hover { border-color: var(--border); }
+  .level-tile .lv { font-weight: 800; font-size: 17px; }
+  .level-tile .cnt { font-size: 11.5px; color: var(--muted); margin: 6px 0 8px; }
+  .level-tile.current { border-color: var(--accent); background: var(--accent-soft); }
+
+  .word-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 4px; border-bottom: 1px solid var(--border); font-size: 15px;
+  }
+  .word-row:last-child { border-bottom: none; }
+  .word-row .w { font-weight: 700; }
+  .word-row .m { color: var(--muted); }
+  .tag { font-size: 11px; font-weight: 700; border-radius: 999px; padding: 3px 9px; margin-left: 8px; }
+  .tag.learned { background: var(--green-soft); color: var(--green); }
+  .tag.known { background: var(--amber-soft); color: var(--amber); }
+
+  .back { background: none; border: none; color: var(--muted); font-size: 14px; font-weight: 600;
+    cursor: pointer; font-family: inherit; padding: 0; margin-bottom: 16px; display: inline-flex; align-items: center; gap: 5px; }
+  .back:hover { color: var(--text); }
+
+  .result-emoji { font-size: 52px; text-align: center; }
+  .result-score { font-size: 30px; font-weight: 800; text-align: center; margin-top: 10px; }
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .tab { padding: 8px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 600;
+    background: var(--card); border: 1px solid var(--border); cursor: pointer; font-family: inherit; }
+  .tab.active { background: var(--text); color: #fff; border-color: var(--text); }
+  .empty { text-align: center; color: var(--muted); padding: 40px 0; font-size: 14.5px; }
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none;
+    align-items: center; justify-content: center; z-index: 10; padding: 20px; }
+  .modal-bg.open { display: flex; }
+  .modal { background: var(--card); border-radius: 18px; padding: 22px; width: 100%; max-width: 380px; }
+  .motiv-pop { animation: popIn .35s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes popIn { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: scale(1); } }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ONBOARDING -->
+  <div id="scr-onboard" class="screen">
+    <div class="logo">kelime<span>ce</span></div>
+    <div class="tagline">Her gün 10 yeni kelime. Seviyene göre, dilediğin dilde.</div>
+    <div class="card">
+      <h2>Merhaba 👋</h2>
+      <p class="sub">Adını yaz, öğrenmek istediğin dili seç. Kısa bir seviye testiyle başlayalım.</p>
+      <div style="margin-top:16px">
+        <input type="text" id="inp-name" placeholder="Adın" maxlength="20">
+      </div>
+      <div class="lang-grid" id="onboard-langs"></div>
+      <div style="margin-top:18px">
+        <button class="btn" id="btn-start-test" disabled>Seviye Testine Başla</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLACEMENT TEST -->
+  <div id="scr-test" class="screen">
+    <div class="counter" id="test-counter"></div>
+    <div class="progress-wrap" style="margin-bottom:22px"><div class="progress-bar" id="test-progress" style="width:0%"></div></div>
+    <div class="card">
+      <p class="sub" style="text-align:center;margin-bottom:6px">Bu kelimenin Türkçesi ne?</p>
+      <div class="bigword" id="test-word"></div>
+      <div id="test-opts" style="margin-top:18px"></div>
+    </div>
+  </div>
+
+  <!-- TEST RESULT -->
+  <div id="scr-testresult" class="screen">
+    <div class="card" style="text-align:center">
+      <div class="result-emoji">🎯</div>
+      <h2 style="margin-top:12px">Seviyen belirlendi!</h2>
+      <div class="result-score" id="testresult-level" style="color:var(--accent)"></div>
+      <p class="sub" id="testresult-detail"></p>
+      <div style="margin-top:20px"><button class="btn" onclick="showHome()">Başlayalım</button></div>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div id="scr-home" class="screen">
+    <div class="topbar">
+      <div class="brand">kelime<span>ce</span></div>
+      <div class="pills">
+        <div class="pill static" id="pill-streak">🔥 0</div>
+        <div class="pill" id="pill-lang" onclick="openLangModal()"></div>
+      </div>
+    </div>
+    <div class="stat-row">
+      <div class="stat"><div class="num" id="st-level">1</div><div class="lbl">Seviye</div></div>
+      <div class="stat"><div class="num" id="st-learned">0</div><div class="lbl">Öğrenilen</div></div>
+      <div class="stat"><div class="num" id="st-known">0</div><div class="lbl">Bilinen</div></div>
+    </div>
+    <div class="card" style="margin-bottom:18px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <strong style="font-size:14px" id="home-level-label"></strong>
+        <span style="font-size:13px;color:var(--muted)" id="home-level-count"></span>
+      </div>
+      <div class="progress-wrap" style="margin-top:10px"><div class="progress-bar" id="home-level-bar" style="width:0%"></div></div>
+    </div>
+    <div class="menu-card" onclick="startDaily()">
+      <div class="ico">📅</div>
+      <div><div class="tt">Günlük Kelimeler</div><div class="dd" id="daily-desc">Bugünün 10 kelimesi seni bekliyor</div></div>
+      <div class="arrow">›</div>
+    </div>
+    <div class="menu-card" onclick="showLevels()">
+      <div class="ico">🪜</div>
+      <div><div class="tt">Seviye Seviye</div><div class="dd">Tüm seviyeleri keşfet, dilediğinden çalış</div></div>
+      <div class="arrow">›</div>
+    </div>
+    <div class="menu-card" onclick="showLearned()">
+      <div class="ico">📚</div>
+      <div><div class="tt">Kelimelerim</div><div class="dd">Öğrendiğin ve bildiğin kelimeler</div></div>
+      <div class="arrow">›</div>
+    </div>
+    <div class="menu-card" onclick="startReview()">
+      <div class="ico">🔁</div>
+      <div><div class="tt">Tekrar Quizi</div><div class="dd">Öğrendiklerin kalıcı mı? Kendini sına</div></div>
+      <div class="arrow">›</div>
+    </div>
+  </div>
+
+  <!-- DAILY: know/don't know -->
+  <div id="scr-daily" class="screen">
+    <button class="back" onclick="showHome()">‹ Ana sayfa</button>
+    <div class="counter" id="daily-counter"></div>
+    <div class="card">
+      <p class="sub" style="text-align:center;margin-bottom:6px">Bu kelimeyi biliyor musun?</p>
+      <div class="bigword" id="daily-word"></div>
+      <div class="meaning" id="daily-meaning" style="visibility:hidden">·</div>
+      <div class="know-btns">
+        <button class="btn green-outline" onclick="dailyKnow(true)">✓ Biliyorum</button>
+        <button class="btn red-outline" onclick="dailyKnow(false)">✗ Bilmiyorum</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAILY: study list -->
+  <div id="scr-study" class="screen">
+    <button class="back" onclick="showHome()">‹ Ana sayfa</button>
+    <h2>Bugünün kelimeleri</h2>
+    <p class="sub">Bu kelimeleri iyice incele, sonra quiz ile pekiştir.</p>
+    <div class="card" style="margin-top:16px" id="study-list"></div>
+    <div style="margin-top:16px"><button class="btn" onclick="startDailyQuiz()">Quize Başla</button></div>
+  </div>
+
+  <!-- QUIZ (shared) -->
+  <div id="scr-quiz" class="screen">
+    <button class="back" onclick="quizAbort()">‹ Çık</button>
+    <div class="counter" id="quiz-counter"></div>
+    <div class="progress-wrap" style="margin-bottom:22px"><div class="progress-bar" id="quiz-progress" style="width:0%"></div></div>
+    <div class="card">
+      <p class="sub" style="text-align:center;margin-bottom:6px" id="quiz-prompt"></p>
+      <div class="bigword" id="quiz-word" style="font-size:28px"></div>
+      <div id="quiz-opts" style="margin-top:18px"></div>
+      <div id="quiz-type-area" style="margin-top:18px;display:none">
+        <input type="text" id="quiz-input" placeholder="Cevabını yaz..." autocomplete="off">
+        <div style="margin-top:12px"><button class="btn" id="quiz-check" onclick="quizCheckTyped()">Kontrol Et</button></div>
+      </div>
+      <div class="feedback" id="quiz-feedback"></div>
+      <div id="quiz-next-wrap" style="margin-top:14px;display:none">
+        <button class="btn ghost" onclick="quizNext()">Devam →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ RESULT -->
+  <div id="scr-quizresult" class="screen">
+    <div class="card" style="text-align:center">
+      <div class="result-emoji" id="qr-emoji"></div>
+      <div class="result-score" id="qr-score"></div>
+      <p class="sub" id="qr-detail"></p>
+      <div id="qr-words" style="text-align:left;margin-top:16px"></div>
+      <div style="margin-top:20px"><button class="btn" onclick="showHome()">Ana Sayfa</button></div>
+    </div>
+  </div>
+
+  <!-- LEVELS -->
+  <div id="scr-levels" class="screen">
+    <button class="back" onclick="showHome()">‹ Ana sayfa</button>
+    <h2>Seviyeler</h2>
+    <p class="sub">Her seviyede 20 kelime. Bir seviyeyi bitirmek için tüm kelimelerini öğrenmen gerek.</p>
+    <div class="level-grid" style="margin-top:16px" id="level-grid"></div>
+  </div>
+
+  <!-- LEVEL DETAIL -->
+  <div id="scr-leveldetail" class="screen">
+    <button class="back" onclick="showLevels()">‹ Seviyeler</button>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h2 id="ld-title"></h2>
+      <button class="btn small" onclick="startLevelQuiz()">Quiz Yap</button>
+    </div>
+    <p class="sub" id="ld-sub"></p>
+    <div class="card" style="margin-top:16px" id="ld-list"></div>
+  </div>
+
+  <!-- LEARNED WORDS -->
+  <div id="scr-learned" class="screen">
+    <button class="back" onclick="showHome()">‹ Ana sayfa</button>
+    <h2>Kelimelerim</h2>
+    <div class="tabs" style="margin-top:14px">
+      <button class="tab active" id="tab-learned" onclick="learnedTab('learned')">Öğrendiklerim</button>
+      <button class="tab" id="tab-known" onclick="learnedTab('known')">Zaten Bildiklerim</button>
+    </div>
+    <div class="card" id="learned-list"></div>
+  </div>
+
+  <!-- MOTİVASYON POP-UP -->
+  <div class="modal-bg" id="motiv-modal">
+    <div class="modal motiv-pop" style="text-align:center">
+      <div style="font-size:48px" id="motiv-emoji"></div>
+      <h2 id="motiv-text" style="margin-top:12px;font-size:22px"></h2>
+      <p class="sub" id="motiv-sub"></p>
+      <div style="margin-top:18px"><button class="btn" id="motiv-btn">Devam 💪</button></div>
+    </div>
+  </div>
+
+  <!-- LANGUAGE MODAL -->
+  <div class="modal-bg" id="lang-modal">
+    <div class="modal">
+      <h2 style="margin-bottom:4px">Dil değiştir</h2>
+      <p class="sub">Her dilin ayrı seviyesi ve ilerlemesi var.</p>
+      <div class="lang-grid" id="modal-langs" style="grid-template-columns:1fr"></div>
+      <div style="margin-top:14px"><button class="btn ghost" onclick="closeLangModal()">Kapat</button></div>
+    </div>
+  </div>
+
+</div>
+<script>
+"use strict";
+/* ============ DATA ============ */
+const LANGS = {
+  en: { name: "İngilizce", flag: "🇬🇧" },
+  de: { name: "Almanca",   flag: "🇩🇪" },
+  es: { name: "İspanyolca", flag: "🇪🇸" },
+  fr: { name: "Fransızca", flag: "🇫🇷" },
+  it: { name: "İtalyanca", flag: "🇮🇹" }
+};
+const LEVEL_SIZE = 20;
+/* Her satır: [tr, en, de, es, fr, it] — 20 kelime = 1 seviye, zorluk artarak gider */
+const WORDS = [
+/* --- Seviye 1: Temel --- */
+["su","water","Wasser","agua","eau","acqua"],
+["ekmek","bread","Brot","pan","pain","pane"],
+["ev","house","Haus","casa","maison","casa"],
+["kedi","cat","Katze","gato","chat","gatto"],
+["köpek","dog","Hund","perro","chien","cane"],
+["kitap","book","Buch","libro","livre","libro"],
+["gün","day","Tag","día","jour","giorno"],
+["gece","night","Nacht","noche","nuit","notte"],
+["anne","mother","Mutter","madre","mère","madre"],
+["baba","father","Vater","padre","père","padre"],
+["el","hand","Hand","mano","main","mano"],
+["göz","eye","Auge","ojo","œil","occhio"],
+["güneş","sun","Sonne","sol","soleil","sole"],
+["ay","moon","Mond","luna","lune","luna"],
+["yıldız","star","Stern","estrella","étoile","stella"],
+["ağaç","tree","Baum","árbol","arbre","albero"],
+["çiçek","flower","Blume","flor","fleur","fiore"],
+["deniz","sea","Meer","mar","mer","mare"],
+["süt","milk","Milch","leche","lait","latte"],
+["elma","apple","Apfel","manzana","pomme","mela"],
+/* --- Seviye 2 (A1-A2): Günlük hayat karışık --- */
+["şehir","city","Stadt","ciudad","ville","città"],
+["okul","school","Schule","escuela","école","scuola"],
+["öğretmen","teacher","Lehrer","profesor","professeur","insegnante"],
+["arkadaş","friend","Freund","amigo","ami","amico"],
+["aile","family","Familie","familia","famille","famiglia"],
+["çocuk","child","Kind","niño","enfant","bambino"],
+["sabah","morning","Morgen","mañana","matin","mattina"],
+["akşam","evening","Abend","tarde","soir","sera"],
+["hafta","week","Woche","semana","semaine","settimana"],
+["yıl","year","Jahr","año","année","anno"],
+["para","money","Geld","dinero","argent","denaro"],
+["yol","road","Straße","camino","route","strada"],
+["hızlı","fast","schnell","rápido","rapide","veloce"],
+["yavaş","slow","langsam","lento","lent","lento"],
+["yeni","new","neu","nuevo","nouveau","nuovo"],
+["eski","old","alt","viejo","vieux","vecchio"],
+["kolay","easy","einfach","fácil","facile","facile"],
+["zor","difficult","schwierig","difícil","difficile","difficile"],
+["ucuz","cheap","billig","barato","bon marché","economico"],
+["pahalı","expensive","teuer","caro","cher","caro"],
+/* --- Seviye 3 (A2): Temel fiiller --- */
+["gitmek","to go","gehen","ir","aller","andare"],
+["gelmek","to come","kommen","venir","venir","venire"],
+["almak","to take","nehmen","tomar","prendre","prendere"],
+["vermek","to give","geben","dar","donner","dare"],
+["yapmak","to do","machen","hacer","faire","fare"],
+["görmek","to see","sehen","ver","voir","vedere"],
+["duymak","to hear","hören","oír","entendre","sentire"],
+["konuşmak","to speak","sprechen","hablar","parler","parlare"],
+["okumak","to read","lesen","leer","lire","leggere"],
+["yazmak","to write","schreiben","escribir","écrire","scrivere"],
+["koşmak","to run","rennen","correr","courir","correre"],
+["yürümek","to walk","laufen","caminar","marcher","camminare"],
+["uyumak","to sleep","schlafen","dormir","dormir","dormire"],
+["içmek","to drink","trinken","beber","boire","bere"],
+["sevmek","to love","lieben","amar","aimer","amare"],
+["istemek","to want","wollen","querer","vouloir","volere"],
+["bilmek","to know","wissen","saber","savoir","sapere"],
+["düşünmek","to think","denken","pensar","penser","pensare"],
+["çalışmak","to work","arbeiten","trabajar","travailler","lavorare"],
+["oynamak","to play","spielen","jugar","jouer","giocare"],
+/* --- Seviye 4 (A2-B1): Duygular ve kişilik --- */
+["korku","fear","Angst","miedo","peur","paura"],
+["öfke","anger","Wut","ira","colère","rabbia"],
+["sevinç","joy","Freude","alegría","joie","gioia"],
+["endişe","worry","Sorge","preocupación","inquiétude","preoccupazione"],
+["cesur","brave","mutig","valiente","courageux","coraggioso"],
+["nazik","polite","höflich","amable","gentil","gentile"],
+["kaba","rude","unhöflich","grosero","impoli","maleducato"],
+["sabırlı","patient","geduldig","paciente","patient","paziente"],
+["kıskanç","jealous","eifersüchtig","celoso","jaloux","geloso"],
+["dürüst","honest","ehrlich","honesto","honnête","onesto"],
+["cömert","generous","großzügig","generoso","généreux","generoso"],
+["cimri","stingy","geizig","tacaño","avare","avaro"],
+["utangaç","shy","schüchtern","tímido","timide","timido"],
+["gurur","pride","Stolz","orgullo","fierté","orgoglio"],
+["umut","hope","Hoffnung","esperanza","espoir","speranza"],
+["pişmanlık","regret","Bedauern","arrepentimiento","regret","rimpianto"],
+["güven","trust","Vertrauen","confianza","confiance","fiducia"],
+["yalnızlık","loneliness","Einsamkeit","soledad","solitude","solitudine"],
+["şaşkınlık","surprise","Überraschung","sorpresa","surprise","sorpresa"],
+["sakin","calm","ruhig","tranquilo","calme","tranquillo"],
+/* --- Seviye 5 (B1): İş ve eğitim --- */
+["meslek","profession","Beruf","profesión","métier","professione"],
+["mühendis","engineer","Ingenieur","ingeniero","ingénieur","ingegnere"],
+["avukat","lawyer","Anwalt","abogado","avocat","avvocato"],
+["hemşire","nurse","Krankenschwester","enfermera","infirmière","infermiera"],
+["işçi","worker","Arbeiter","trabajador","ouvrier","operaio"],
+["patron","boss","Chef","jefe","patron","capo"],
+["maaş","salary","Gehalt","salario","salaire","stipendio"],
+["toplantı","meeting","Besprechung","reunión","réunion","riunione"],
+["proje","project","Projekt","proyecto","projet","progetto"],
+["sınav","exam","Prüfung","examen","examen","esame"],
+["ödev","homework","Hausaufgabe","tarea","devoir","compito"],
+["üniversite","university","Universität","universidad","université","università"],
+["deneyim","experience","Erfahrung","experiencia","expérience","esperienza"],
+["başvuru","application","Bewerbung","solicitud","candidature","domanda"],
+["mülakat","interview","Vorstellungsgespräch","entrevista","entretien","colloquio"],
+["sözleşme","contract","Vertrag","contrato","contrat","contratto"],
+["izin","permission","Erlaubnis","permiso","permission","permesso"],
+["terfi","promotion","Beförderung","ascenso","promotion","promozione"],
+["emeklilik","retirement","Ruhestand","jubilación","retraite","pensione"],
+["müşteri","customer","Kunde","cliente","client","cliente"],
+/* --- Seviye 6 (B1): Günlük iletişim fiilleri --- */
+["seçmek","to choose","wählen","elegir","choisir","scegliere"],
+["açıklamak","to explain","erklären","explicar","expliquer","spiegare"],
+["katılmak","to participate","teilnehmen","participar","participer","partecipare"],
+["paylaşmak","to share","teilen","compartir","partager","condividere"],
+["kazanmak","to earn","verdienen","ganar","gagner","guadagnare"],
+["kaybetmek","to lose","verlieren","perder","perdre","perdere"],
+["korumak","to protect","schützen","proteger","protéger","proteggere"],
+["hazırlamak","to prepare","vorbereiten","preparar","préparer","preparare"],
+["çözmek","to solve","lösen","resolver","résoudre","risolvere"],
+["ölçmek","to measure","messen","medir","mesurer","misurare"],
+["artmak","to increase","steigen","aumentar","augmenter","aumentare"],
+["azalmak","to decrease","sinken","disminuir","diminuer","diminuire"],
+["değişmek","to change","sich ändern","cambiar","changer","cambiare"],
+["takip etmek","to follow","folgen","seguir","suivre","seguire"],
+["desteklemek","to support","unterstützen","apoyar","soutenir","sostenere"],
+["yönetmek","to manage","leiten","dirigir","gérer","gestire"],
+["üretmek","to produce","produzieren","producir","produire","produrre"],
+["tüketmek","to consume","verbrauchen","consumir","consommer","consumare"],
+["sağlamak","to provide","bereitstellen","proporcionar","fournir","fornire"],
+["taşımak","to carry","tragen","llevar","porter","portare"],
+/* --- Seviye 7 (B1-B2): Soyut isimler --- */
+["karar","decision","Entscheidung","decisión","décision","decisione"],
+["amaç","goal","Ziel","objetivo","objectif","obiettivo"],
+["sonuç","result","Ergebnis","resultado","résultat","risultato"],
+["fırsat","opportunity","Gelegenheit","oportunidad","opportunité","opportunità"],
+["sorumluluk","responsibility","Verantwortung","responsabilidad","responsabilité","responsabilità"],
+["özellik","feature","Eigenschaft","característica","caractéristique","caratteristica"],
+["davranış","behavior","Verhalten","comportamiento","comportement","comportamento"],
+["ilişki","relationship","Beziehung","relación","relation","relazione"],
+["gereksinim","requirement","Anforderung","requisito","exigence","requisito"],
+["beceri","skill","Fähigkeit","habilidad","compétence","abilità"],
+["bilgi","knowledge","Wissen","conocimiento","connaissance","conoscenza"],
+["dikkat","attention","Aufmerksamkeit","atención","attention","attenzione"],
+["çaba","effort","Anstrengung","esfuerzo","effort","sforzo"],
+["merak","curiosity","Neugier","curiosidad","curiosité","curiosità"],
+["alışkanlık","habit","Gewohnheit","costumbre","habitude","abitudine"],
+["tercih","preference","Vorliebe","preferencia","préférence","preferenza"],
+["avantaj","advantage","Vorteil","ventaja","avantage","vantaggio"],
+["dezavantaj","disadvantage","Nachteil","desventaja","inconvénient","svantaggio"],
+["ilerleme","progress","Fortschritt","progreso","progrès","progresso"],
+["başarı","success","Erfolg","éxito","succès","successo"],
+/* --- Seviye 8 (B2): Ekonomi ve toplum hayatı --- */
+["tanık","witness","Zeuge","testigo","témoin","testimone"],
+["suç","crime","Verbrechen","delito","crime","crimine"],
+["ceza","punishment","Strafe","castigo","punition","punizione"],
+["mahkeme","court","Gericht","tribunal","tribunal","tribunale"],
+["oy","vote","Stimme","voto","vote","voto"],
+["seçim","election","Wahl","elección","élection","elezione"],
+["vatandaş","citizen","Bürger","ciudadano","citoyen","cittadino"],
+["sınır","border","Grenze","frontera","frontière","confine"],
+["göç","migration","Migration","migración","migration","migrazione"],
+["nüfus","population","Bevölkerung","población","population","popolazione"],
+["işsizlik","unemployment","Arbeitslosigkeit","desempleo","chômage","disoccupazione"],
+["yoksulluk","poverty","Armut","pobreza","pauvreté","povertà"],
+["zenginlik","wealth","Reichtum","riqueza","richesse","ricchezza"],
+["vergi","tax","Steuer","impuesto","impôt","tassa"],
+["borç","debt","Schulden","deuda","dette","debito"],
+["yatırım","investment","Investition","inversión","investissement","investimento"],
+["kâr","profit","Gewinn","beneficio","bénéfice","profitto"],
+["zarar","damage","Schaden","daño","dommage","danno"],
+["rekabet","competition","Wettbewerb","competencia","concurrence","concorrenza"],
+["reklam","advertisement","Werbung","publicidad","publicité","pubblicità"],
+/* --- Seviye 9 (B2): Toplum ve soyut kavramlar --- */
+["özgürlük","freedom","Freiheit","libertad","liberté","libertà"],
+["adalet","justice","Gerechtigkeit","justicia","justice","giustizia"],
+["barış","peace","Frieden","paz","paix","pace"],
+["savaş","war","Krieg","guerra","guerre","guerra"],
+["hükümet","government","Regierung","gobierno","gouvernement","governo"],
+["toplum","society","Gesellschaft","sociedad","société","società"],
+["kültür","culture","Kultur","cultura","culture","cultura"],
+["gelenek","tradition","Tradition","tradición","tradition","tradizione"],
+["sanat","art","Kunst","arte","art","arte"],
+["bilim","science","Wissenschaft","ciencia","science","scienza"],
+["tarih","history","Geschichte","historia","histoire","storia"],
+["ekonomi","economy","Wirtschaft","economía","économie","economia"],
+["siyaset","politics","Politik","política","politique","politica"],
+["felsefe","philosophy","Philosophie","filosofía","philosophie","filosofia"],
+["edebiyat","literature","Literatur","literatura","littérature","letteratura"],
+["çevre","environment","Umwelt","medio ambiente","environnement","ambiente"],
+["doğa","nature","Natur","naturaleza","nature","natura"],
+["enerji","energy","Energie","energía","énergie","energia"],
+["teknoloji","technology","Technologie","tecnología","technologie","tecnologia"],
+["hukuk","law","Recht","derecho","droit","diritto"],
+/* --- Seviye 10 (B2-C1): İleri fiiller --- */
+["başarmak","to achieve","erreichen","lograr","réussir","riuscire"],
+["kanıtlamak","to prove","beweisen","probar","prouver","dimostrare"],
+["vazgeçmek","to give up","aufgeben","renunciar","abandonner","rinunciare"],
+["karşılaştırmak","to compare","vergleichen","comparar","comparer","confrontare"],
+["tartışmak","to discuss","diskutieren","discutir","discuter","discutere"],
+["ikna etmek","to convince","überzeugen","convencer","convaincre","convincere"],
+["önermek","to suggest","vorschlagen","sugerir","suggérer","suggerire"],
+["reddetmek","to refuse","ablehnen","rechazar","refuser","rifiutare"],
+["kabul etmek","to accept","akzeptieren","aceptar","accepter","accettare"],
+["geliştirmek","to develop","entwickeln","desarrollar","développer","sviluppare"],
+["keşfetmek","to discover","entdecken","descubrir","découvrir","scoprire"],
+["icat etmek","to invent","erfinden","inventar","inventer","inventare"],
+["tahmin etmek","to guess","raten","adivinar","deviner","indovinare"],
+["hayal etmek","to imagine","sich vorstellen","imaginar","imaginer","immaginare"],
+["fark etmek","to notice","bemerken","notar","remarquer","notare"],
+["şikayet etmek","to complain","sich beschweren","quejarse","se plaindre","lamentarsi"],
+["özür dilemek","to apologize","sich entschuldigen","disculparse","s'excuser","scusarsi"],
+["ertelemek","to postpone","verschieben","posponer","reporter","rimandare"],
+["uygulamak","to apply","anwenden","aplicar","appliquer","applicare"],
+["önlemek","to prevent","verhindern","prevenir","prévenir","prevenire"],
+/* --- Seviye 11 (C1): Zihinsel ve ifade fiilleri --- */
+["varsaymak","to assume","annehmen","suponer","supposer","supporre"],
+["kavramak","to comprehend","begreifen","comprender","comprendre","comprendere"],
+["yorumlamak","to interpret","interpretieren","interpretar","interpréter","interpretare"],
+["vurgulamak","to emphasize","betonen","enfatizar","souligner","sottolineare"],
+["üstlenmek","to undertake","übernehmen","asumir","assumer","assumersi"],
+["kaçınmak","to avoid","vermeiden","evitar","éviter","evitare"],
+["dayanmak","to endure","ertragen","soportar","supporter","sopportare"],
+["sürdürmek","to maintain","aufrechterhalten","mantener","maintenir","mantenere"],
+["edinmek","to acquire","erwerben","adquirir","acquérir","acquisire"],
+["aktarmak","to convey","übermitteln","transmitir","transmettre","trasmettere"],
+["yansıtmak","to reflect","widerspiegeln","reflejar","refléter","riflettere"],
+["çarpıtmak","to distort","verzerren","distorsionar","déformer","distorcere"],
+["abartmak","to exaggerate","übertreiben","exagerar","exagérer","esagerare"],
+["küçümsemek","to underestimate","unterschätzen","subestimar","sous-estimer","sottovalutare"],
+["övmek","to praise","loben","elogiar","louer","elogiare"],
+["eleştirmek","to criticize","kritisieren","criticar","critiquer","criticare"],
+["ayırt etmek","to distinguish","unterscheiden","distinguir","distinguer","distinguere"],
+["ima etmek","to imply","andeuten","insinuar","insinuer","insinuare"],
+["çürütmek","to refute","widerlegen","refutar","réfuter","confutare"],
+["tasarlamak","to design","entwerfen","diseñar","concevoir","progettare"],
+/* --- Seviye 12 (C1): İleri sıfatlar ve zarflar --- */
+["kesinlikle","definitely","definitiv","definitivamente","certainement","sicuramente"],
+["muhtemelen","probably","wahrscheinlich","probablemente","probablement","probabilmente"],
+["nadiren","rarely","selten","raramente","rarement","raramente"],
+["sıkça","frequently","häufig","frecuentemente","fréquemment","frequentemente"],
+["aniden","suddenly","plötzlich","de repente","soudainement","improvvisamente"],
+["dikkatli","careful","vorsichtig","cuidadoso","prudent","attento"],
+["sorumlu","responsible","verantwortlich","responsable","responsable","responsabile"],
+["bağımsız","independent","unabhängig","independiente","indépendant","indipendente"],
+["karmaşık","complicated","kompliziert","complicado","compliqué","complicato"],
+["belirsiz","uncertain","ungewiss","incierto","incertain","incerto"],
+["kaçınılmaz","inevitable","unvermeidlich","inevitable","inévitable","inevitabile"],
+["olağanüstü","extraordinary","außergewöhnlich","extraordinario","extraordinaire","straordinario"],
+["verimli","efficient","effizient","eficiente","efficace","efficiente"],
+["tarafsız","neutral","neutral","neutral","neutre","neutrale"],
+["çelişkili","contradictory","widersprüchlich","contradictorio","contradictoire","contraddittorio"],
+["tutarlı","consistent","konsequent","coherente","cohérent","coerente"],
+["esnek","flexible","flexibel","flexible","flexible","flessibile"],
+["hassas","sensitive","empfindlich","sensible","sensible","sensibile"],
+["kalıcı","permanent","dauerhaft","permanente","permanent","permanente"],
+["geçici","temporary","vorübergehend","temporal","temporaire","temporaneo"],
+/* --- Seviye 13 (C1): Akademik dil --- */
+["varsayım","assumption","Annahme","suposición","supposition","supposizione"],
+["müzakere","negotiation","Verhandlung","negociación","négociation","trattativa"],
+["itiraz","objection","Einwand","objeción","objection","obiezione"],
+["neden","cause","Ursache","causa","cause","causa"],
+["etki","effect","Wirkung","efecto","effet","effetto"],
+["oran","proportion","Verhältnis","proporción","proportion","proporzione"],
+["ortalama","average","Durchschnitt","promedio","moyenne","media"],
+["eğilim","tendency","Tendenz","tendencia","tendance","tendenza"],
+["kaynak","source","Quelle","fuente","source","fonte"],
+["araştırma","research","Forschung","investigación","recherche","ricerca"],
+["analiz","analysis","Analyse","análisis","analyse","analisi"],
+["değerlendirme","evaluation","Bewertung","evaluación","évaluation","valutazione"],
+["yorum","comment","Kommentar","comentario","commentaire","commento"],
+["özet","summary","Zusammenfassung","resumen","résumé","riassunto"],
+["taahhüt","commitment","Verpflichtung","compromiso","engagement","impegno"],
+["kapsam","scope","Umfang","alcance","portée","portata"],
+["sürdürülebilirlik","sustainability","Nachhaltigkeit","sostenibilidad","durabilité","sostenibilità"],
+["küreselleşme","globalization","Globalisierung","globalización","mondialisation","globalizzazione"],
+["yaklaşım","approach","Ansatz","enfoque","approche","approccio"],
+["algı","perception","Wahrnehmung","percepción","perception","percezione"],
+/* --- Seviye 14 (C1-C2): Karakter nüansları --- */
+["özgün","authentic","authentisch","auténtico","authentique","autentico"],
+["yüzeysel","superficial","oberflächlich","superficial","superficiel","superficiale"],
+["kapsamlı","comprehensive","umfassend","exhaustivo","exhaustif","esaustivo"],
+["özlü","concise","prägnant","conciso","concis","conciso"],
+["tutkulu","passionate","leidenschaftlich","apasionado","passionné","appassionato"],
+["alaycı","sarcastic","sarkastisch","sarcástico","sarcastique","sarcastico"],
+["inatçı","stubborn","stur","terco","têtu","testardo"],
+["kurnaz","cunning","schlau","astuto","rusé","astuto"],
+["saf","naive","naiv","ingenuo","naïf","ingenuo"],
+["bilge","wise","weise","sabio","sage","saggio"],
+["acımasız","ruthless","rücksichtslos","despiadado","impitoyable","spietato"],
+["gösterişli","showy","auffällig","llamativo","voyant","appariscente"],
+["mütevazı","modest","bescheiden","modesto","modeste","modesto"],
+["sadık","loyal","treu","leal","loyal","leale"],
+["nankör","ungrateful","undankbar","desagradecido","ingrat","ingrato"],
+["anlayışlı","understanding","verständnisvoll","comprensivo","compréhensif","comprensivo"],
+["çekingen","reserved","zurückhaltend","reservado","réservé","riservato"],
+["girişken","sociable","gesellig","sociable","sociable","socievole"],
+["kararlı","determined","entschlossen","decidido","déterminé","determinato"],
+["soğukkanlı","composed","gelassen","sereno","serein","sereno"],
+/* --- Seviye 15 (C2): Usta seviye --- */
+["muğlak","ambiguous","mehrdeutig","ambiguo","ambigu","ambiguo"],
+["titiz","meticulous","akribisch","meticuloso","méticuleux","meticoloso"],
+["öngörü","foresight","Weitsicht","previsión","prévoyance","lungimiranza"],
+["azim","perseverance","Ausdauer","perseverancia","persévérance","perseveranza"],
+["ihtiyat","prudence","Besonnenheit","prudencia","prudence","prudenza"],
+["belagat","eloquence","Beredsamkeit","elocuencia","éloquence","eloquenza"],
+["ikilem","dilemma","Dilemma","dilema","dilemme","dilemma"],
+["önyargı","prejudice","Vorurteil","prejuicio","préjugé","pregiudizio"],
+["ayrımcılık","discrimination","Diskriminierung","discriminación","discrimination","discriminazione"],
+["ihtilaf","controversy","Kontroverse","controversia","controverse","controversia"],
+["sezgi","intuition","Intuition","intuición","intuition","intuizione"],
+["şüphecilik","skepticism","Skepsis","escepticismo","scepticisme","scetticismo"],
+["ihtiras","ambition","Ehrgeiz","ambición","ambition","ambizione"],
+["tevazu","humility","Demut","humildad","humilité","umiltà"],
+["riya","hypocrisy","Heuchelei","hipocresía","hypocrisie","ipocrisia"],
+["vicdan","conscience","Gewissen","conciencia","conscience","coscienza"],
+["çıkarım","inference","Schlussfolgerung","inferencia","inférence","inferenza"],
+["istisna","exception","Ausnahme","excepción","exception","eccezione"],
+["zorunluluk","necessity","Notwendigkeit","necesidad","nécessité","necessità"],
+["dayanıklılık","resilience","Widerstandsfähigkeit","resiliencia","résilience","resilienza"],
+/* --- Seviye 16 (C2+): Zirve --- */
+["kayıtsızlık","indifference","Gleichgültigkeit","indiferencia","indifférence","indifferenza"],
+["haset","envy","Neid","envidia","envie","invidia"],
+["metanet","fortitude","Standhaftigkeit","entereza","fermeté","fermezza"],
+["basiret","sagacity","Scharfsinn","sagacidad","sagacité","sagacia"],
+["istikrar","stability","Stabilität","estabilidad","stabilité","stabilità"],
+["tahakküm","domination","Herrschaft","dominación","domination","dominazione"],
+["muamma","enigma","Rätsel","enigma","énigme","enigma"],
+["ihtişam","splendor","Pracht","esplendor","splendeur","splendore"],
+["sefalet","misery","Elend","miseria","misère","miseria"],
+["intikam","revenge","Rache","venganza","vengeance","vendetta"],
+["merhamet","compassion","Mitgefühl","compasión","compassion","compassione"],
+["küstahlık","insolence","Unverschämtheit","insolencia","insolence","insolenza"],
+["cehalet","ignorance","Unwissenheit","ignorancia","ignorance","ignoranza"],
+["itibar","reputation","Ansehen","reputación","réputation","reputazione"],
+["imtiyaz","privilege","Privileg","privilegio","privilège","privilegio"],
+["tezat","contrast","Gegensatz","contraste","contraste","contrasto"],
+["ihanet","betrayal","Verrat","traición","trahison","tradimento"],
+["teselli","consolation","Trost","consuelo","consolation","consolazione"],
+["tereddüt","hesitation","Zögern","vacilación","hésitation","esitazione"],
+["fedakarlık","sacrifice","Opfer","sacrificio","sacrifice","sacrificio"]
+];
+/* ============ YARDIMCILAR ============ */
+const LANG_KEYS = ["en","de","es","fr","it"];
+const COL = { tr:0, en:1, de:2, es:3, fr:4, it:5 };
+const LEVEL_COUNT = WORDS.length / LEVEL_SIZE;
+const DAILY_COUNT = 10;
+
+const $ = id => document.getElementById(id);
+function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); $(id).classList.add("active"); window.scrollTo(0,0); }
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function sample(a,n){ return shuffle(a).slice(0,n); }
+function today(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function yesterday(){ const d=new Date(); d.setDate(d.getDate()-1); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function norm(s){ return s.toLowerCase().trim().replace(/^to\s+/,"").replace(/^sich\s+/,"").replace(/œ/g,"oe").replace(/ß/g,"ss").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\s+/g," "); }
+function esc(s){ const d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
+function levelOf(i){ return Math.floor(i/LEVEL_SIZE)+1; }
+function levelWords(lv){ const s=(lv-1)*LEVEL_SIZE; return Array.from({length:LEVEL_SIZE},(_,k)=>s+k); }
+function wTr(i){ return WORDS[i][COL.tr]; }
+function wFor(i,lang){ return WORDS[i][COL[lang]]; }
+
+/* ============ DURUM ============ */
+let S = null;
+function loadState(){ try { S = JSON.parse(localStorage.getItem("kelimece_v4")); } catch(e){ S=null; } }
+function saveState(){ localStorage.setItem("kelimece_v4", JSON.stringify(S)); }
+function P(){ return S.langs[S.activeLang]; }
+function newProfile(level){ return { level, known:[], learned:[], streak:0, lastStreakDay:null, daily:null }; }
+function isDone(p,i){ return p.learned.includes(i)||p.known.includes(i); }
+
+/* ============ ONBOARDING ============ */
+let obLang = null;
+function renderOnboardLangs(){
+  $("onboard-langs").innerHTML = LANG_KEYS.map(k=>
+    `<div class="lang-opt ${obLang===k?"sel":""}" onclick="obPick('${k}')"><span class="flag">${LANGS[k].flag}</span>${LANGS[k].name}</div>`).join("");
+}
+function obPick(k){ obLang=k; renderOnboardLangs(); obValidate(); }
+function obValidate(){ $("btn-start-test").disabled = !(obLang && $("inp-name").value.trim().length>0); }
+$("inp-name").addEventListener("input", obValidate);
+$("btn-start-test").addEventListener("click", ()=>{
+  if(!S) S = { name:"", activeLang:null, langs:{} };
+  S.name = $("inp-name").value.trim();
+  S.activeLang = obLang;
+  saveState();
+  startPlacement(obLang);
+});
+
+/* ============ SEVİYE TESTİ (adaptif) ============
+   Her seviyeden 6 soru sorulur. 6'da 5 doğru → bir üst seviyeye geç.
+   Geçemediğin seviye, senin seviyendir. */
+const TEST_PER_LEVEL = 6;
+const TEST_PASS = 5;
+let test = null;
+function startPlacement(lang){
+  test = { lang, level:1, qs: sample(levelWords(1), TEST_PER_LEVEL), i:0, correct:0, totalQ:0, totalOk:0 };
+  show("scr-test");
+  renderTestQ();
+}
+/* Seviye geçişlerinde çıkan motivasyon sözleri (sırayla, artan coşkuyla) */
+const MOTIV = [
+  ["👏","Ooo, hiç de fena değil!","1. seviye cepte, bakalım devamı gelecek mi?"],
+  ["🧐","Bakıyorum sen de bir şeyler biliyorsun...","2. seviye de geçildi, ciddileşiyorsun."],
+  ["🤌","Maşallah maşallah!","3 seviye üst üste... Nazar değmesin."],
+  ["😏","Eh, fena sayılmazsın...","Şaka şaka, 4. seviye bitti, gayet iyisin!"],
+  ["😎","Vay vay vay...","Bu ne özgüven, bu ne bilgi! 5. seviye tarih oldu."],
+  ["😱","Aman Allah'ım, neler oluyor?!","6. seviyeyi de geçtin, el mi değdi sana?"],
+  ["🕵️","Sen bu dili gizli gizli mi çalıştın?","7. seviye... İtiraf et, kursa mı gittin?"],
+  ["👏👏","Helal olsun be!","8. seviye! Alkışlar senin için geliyor."],
+  ["📖","Dur dur dur... Sözlük müsün sen?","9. seviye geçildi, kelimeler senden korkuyor."],
+  ["🧿","Nazar boncuğu taktır artık!","10. seviye... Bu kadarına gıpta edilir."],
+  ["🔥","Efsanesin, efsane!","11. seviye! Mahalleye ün saldın."],
+  ["🎓","Şaka mısın sen?!","12. seviye... Hocalar seni konuşuyor."],
+  ["🚀","Ana dilin bu olmasın?!","13. seviye geçildi, uzaya çıktık."],
+  ["👑","Yok artık!","14. seviyeyi de geçtin. Bu dili sen mi icat ettin?"],
+  ["🐐","Sen bir dehasın!","15. seviye... Son durağa geldin, tarih yazıyorsun."]
+];
+let motivCb = null;
+function showMotiv(passedLevel, cb){
+  const m = MOTIV[Math.min(passedLevel-1, MOTIV.length-1)];
+  $("motiv-emoji").textContent = m[0];
+  $("motiv-text").textContent = m[1];
+  $("motiv-sub").textContent = m[2];
+  motivCb = cb;
+  $("motiv-modal").classList.add("open");
+}
+$("motiv-btn").addEventListener("click", ()=>{
+  $("motiv-modal").classList.remove("open");
+  if(motivCb){ const cb=motivCb; motivCb=null; cb(); }
+});
+function renderTestQ(){
+  const wi = test.qs[test.i];
+  $("test-counter").textContent = `Seviye ${test.level} testi — Soru ${test.i+1} / ${TEST_PER_LEVEL}`;
+  /* Çubuk sadece içinde bulunulan seviyenin ilerlemesini gösterir */
+  $("test-progress").style.width = (test.i/TEST_PER_LEVEL*100)+"%";
+  $("test-word").textContent = wFor(wi, test.lang);
+  const distract = sample(WORDS.map((_,k)=>k).filter(k=>k!==wi && wTr(k)!==wTr(wi)), 3);
+  const opts = shuffle([wi, ...distract]);
+  $("test-opts").innerHTML = opts.map(k=>
+    `<button class="q-opt" onclick="testAnswer(${k},${wi},this)">${esc(wTr(k))}</button>`).join("");
+}
+function testAnswer(sel, correct, btn){
+  document.querySelectorAll("#test-opts .q-opt").forEach(b=>b.onclick=null);
+  test.totalQ++;
+  if(sel===correct){ btn.classList.add("correct"); test.correct++; test.totalOk++; }
+  else { btn.classList.add("wrong"); }
+  setTimeout(()=>{
+    test.i++;
+    /* Kalan sorularla geçme şansı kalmadıysa seviyeyi erken bitir */
+    const remaining = TEST_PER_LEVEL - test.i;
+    const canStillPass = test.correct + remaining >= TEST_PASS;
+    if(test.i < TEST_PER_LEVEL && canStillPass){ renderTestQ(); return; }
+    /* seviye bitti: geçti mi? */
+    if(test.correct >= TEST_PASS){
+      if(test.level >= LEVEL_COUNT){ finishPlacement(LEVEL_COUNT, true); return; }
+      const passed = test.level;
+      showMotiv(passed, ()=>{
+        test.level++;
+        test.qs = sample(levelWords(test.level), TEST_PER_LEVEL);
+        test.i = 0; test.correct = 0;
+        renderTestQ();
+      });
+    } else {
+      finishPlacement(test.level, false);
+    }
+  }, 650);
+}
+function finishPlacement(level, passedAll){
+  S.langs[test.lang] = newProfile(level);
+  S.activeLang = test.lang;
+  saveState();
+  $("testresult-level").textContent = "Seviye " + level;
+  const stat = `Toplam ${test.totalQ} soruda ${test.totalOk} doğru yaptın.`;
+  $("testresult-detail").textContent = passedAll
+    ? `Tüm seviyeleri geçtin, etkileyici! ${stat} En üst seviyeden başlıyorsun.`
+    : `${stat} ${LANGS[test.lang].name} yolculuğun ${level}. seviyeden başlıyor.`;
+  show("scr-testresult");
+}
+
+/* ============ ANA SAYFA ============ */
+function showHome(){
+  const p = P();
+  $("pill-lang").innerHTML = LANGS[S.activeLang].flag + " " + LANGS[S.activeLang].name;
+  $("pill-streak").textContent = "🔥 " + (p.streak||0);
+  $("st-level").textContent = p.level;
+  $("st-learned").textContent = p.learned.length;
+  $("st-known").textContent = p.known.length;
+  const lw = levelWords(p.level);
+  const done = lw.filter(i=>isDone(p,i)).length;
+  $("home-level-label").textContent = `Seviye ${p.level} ilerlemesi`;
+  $("home-level-count").textContent = `${done} / ${LEVEL_SIZE} kelime`;
+  $("home-level-bar").style.width = (done/LEVEL_SIZE*100)+"%";
+  const d = p.daily;
+  if(d && d.date===today() && d.quizDone) $("daily-desc").textContent = "Bugünü tamamladın ✓ — istersen tekrar bak";
+  else if(d && d.date===today()) $("daily-desc").textContent = "Bugünün kelimeleri hazır, quiz seni bekliyor";
+  else $("daily-desc").textContent = "Bugünün 10 kelimesi seni bekliyor";
+  show("scr-home");
+}
+
+/* ============ GÜNLÜK AKIŞ ============ */
+let dailySel = null; // {queue, picked, pos}
+function dailyCandidates(p){
+  const order = [];
+  for(let lv=p.level; lv<=LEVEL_COUNT; lv++) order.push(...levelWords(lv));
+  for(let lv=p.level-1; lv>=1; lv--) order.push(...levelWords(lv));
+  return order.filter(i=>!isDone(p,i));
+}
+function startDaily(){
+  const p = P();
+  if(p.daily && p.daily.date===today()){
+    renderStudy(p.daily.words);
+    return;
+  }
+  const cand = dailyCandidates(p);
+  if(cand.length===0){ alert("Tebrikler! Bu dilde tüm kelimeleri tamamladın 🎉"); return; }
+  dailySel = { queue: cand, picked: [], pos: 0 };
+  show("scr-daily");
+  renderDailyCard();
+}
+function renderDailyCard(){
+  const wi = dailySel.queue[dailySel.pos];
+  $("daily-counter").textContent = `Seçilen: ${dailySel.picked.length} / ${DAILY_COUNT}`;
+  $("daily-word").textContent = wFor(wi, S.activeLang);
+  $("daily-meaning").style.visibility = "hidden";
+  $("daily-meaning").textContent = wTr(wi);
+}
+function dailyKnow(knows){
+  const p = P();
+  const wi = dailySel.queue[dailySel.pos];
+  if(knows){
+    p.known.push(wi);
+  } else {
+    dailySel.picked.push(wi);
+    $("daily-meaning").style.visibility = "visible";
+  }
+  saveState();
+  const advance = ()=>{
+    dailySel.pos++;
+    if(dailySel.picked.length>=DAILY_COUNT || dailySel.pos>=dailySel.queue.length){
+      finishDailySelection();
+    } else {
+      renderDailyCard();
+    }
+  };
+  if(!knows){
+    document.querySelectorAll("#scr-daily .know-btns .btn").forEach(b=>b.style.pointerEvents="none");
+    setTimeout(()=>{ document.querySelectorAll("#scr-daily .know-btns .btn").forEach(b=>b.style.pointerEvents=""); advance(); }, 900);
+  } else advance();
+}
+function finishDailySelection(){
+  const p = P();
+  checkLevelUp(p, false);
+  p.daily = { date: today(), words: dailySel.picked, quizDone: false };
+  saveState();
+  if(dailySel.picked.length===0){ showHome(); return; }
+  renderStudy(p.daily.words);
+}
+function renderStudy(words){
+  $("study-list").innerHTML = words.map(i=>
+    `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))}</span><span class="m">${esc(wTr(i))}</span></div>`).join("");
+  show("scr-study");
+}
+function startDailyQuiz(){
+  quizStart(P().daily.words, { markLearned:true, daily:true });
+}
+
+/* ============ QUIZ MOTORU ============ */
+let quiz = null;
+function quizStart(wordIdxs, opts){
+  const types = ["mc","mcrev","typed"];
+  const qs = shuffle(wordIdxs).map((wi,k)=>({ wi, type: types[k%3] }));
+  quiz = { qs: shuffle(qs), i:0, correct:[], wrong:[], opts };
+  show("scr-quiz");
+  renderQuizQ();
+}
+function quizAbort(){ quiz=null; showHome(); }
+function renderQuizQ(){
+  const q = quiz.qs[quiz.i];
+  const lang = S.activeLang;
+  $("quiz-counter").textContent = `Soru ${quiz.i+1} / ${quiz.qs.length}`;
+  $("quiz-progress").style.width = (quiz.i/quiz.qs.length*100)+"%";
+  $("quiz-feedback").textContent = ""; $("quiz-feedback").className = "feedback";
+  $("quiz-next-wrap").style.display = "none";
+  $("quiz-opts").innerHTML = "";
+  $("quiz-type-area").style.display = "none";
+  $("quiz-input").value = "";
+
+  if(q.type==="mc"){
+    $("quiz-prompt").textContent = "Bu kelimenin Türkçesi ne?";
+    $("quiz-word").textContent = wFor(q.wi, lang);
+    const distract = sample(WORDS.map((_,k)=>k).filter(k=>k!==q.wi && wTr(k)!==wTr(q.wi)), 3);
+    const options = shuffle([q.wi, ...distract]);
+    $("quiz-opts").innerHTML = options.map(k=>
+      `<button class="q-opt" onclick="quizAnswerMC(${k===q.wi},this)">${esc(wTr(k))}</button>`).join("");
+  } else if(q.type==="mcrev"){
+    $("quiz-prompt").textContent = `"${wTr(q.wi)}" kelimesinin ${LANGS[lang].name} karşılığı hangisi?`;
+    $("quiz-word").textContent = wTr(q.wi);
+    const distract = sample(WORDS.map((_,k)=>k).filter(k=>k!==q.wi && wFor(k,lang)!==wFor(q.wi,lang)), 3);
+    const options = shuffle([q.wi, ...distract]);
+    $("quiz-opts").innerHTML = options.map(k=>
+      `<button class="q-opt" onclick="quizAnswerMC(${k===q.wi},this)">${esc(wFor(k,lang))}</button>`).join("");
+  } else {
+    $("quiz-prompt").textContent = `"${wTr(q.wi)}" kelimesini ${LANGS[lang].name} yaz`;
+    $("quiz-word").textContent = wTr(q.wi);
+    $("quiz-type-area").style.display = "block";
+    setTimeout(()=>$("quiz-input").focus(), 50);
+  }
+}
+function quizAnswerMC(ok, btn){
+  document.querySelectorAll("#quiz-opts .q-opt").forEach(b=>b.onclick=null);
+  const q = quiz.qs[quiz.i];
+  if(ok){ btn.classList.add("correct"); markResult(true); showFeedback(true); }
+  else {
+    btn.classList.add("wrong");
+    document.querySelectorAll("#quiz-opts .q-opt").forEach(b=>{
+      const correctText = q.type==="mc" ? wTr(q.wi) : wFor(q.wi, S.activeLang);
+      if(b.textContent===correctText) b.classList.add("correct");
+    });
+    markResult(false); showFeedback(false);
+  }
+  $("quiz-next-wrap").style.display = "block";
+}
+function quizCheckTyped(){
+  const q = quiz.qs[quiz.i];
+  const answer = wFor(q.wi, S.activeLang);
+  const ok = norm($("quiz-input").value) === norm(answer);
+  markResult(ok); showFeedback(ok, answer);
+  $("quiz-check").disabled = true;
+  $("quiz-next-wrap").style.display = "block";
+}
+$("quiz-input") && $("quiz-input").addEventListener("keydown", e=>{ if(e.key==="Enter" && !$("quiz-check").disabled) quizCheckTyped(); });
+function markResult(ok){
+  const wi = quiz.qs[quiz.i].wi;
+  (ok?quiz.correct:quiz.wrong).push(wi);
+}
+function showFeedback(ok, answer){
+  const f = $("quiz-feedback");
+  if(ok){ f.textContent = "Doğru! 🎉"; f.className = "feedback ok"; }
+  else { f.textContent = answer ? `Yanlış — doğrusu: ${answer}` : "Yanlış 😕"; f.className = "feedback no"; }
+}
+function quizNext(){
+  $("quiz-check").disabled = false;
+  quiz.i++;
+  if(quiz.i < quiz.qs.length) renderQuizQ();
+  else finishQuiz();
+}
+function finishQuiz(){
+  const p = P();
+  const total = quiz.qs.length, ok = quiz.correct.length;
+  let extra = "";
+  if(quiz.opts.markLearned){
+    quiz.correct.forEach(wi=>{ if(!p.learned.includes(wi)) p.learned.push(wi); });
+  }
+  if(quiz.opts.review){
+    quiz.wrong.forEach(wi=>{ p.learned = p.learned.filter(x=>x!==wi); });
+    if(quiz.wrong.length) extra = ` Yanlış yaptığın ${quiz.wrong.length} kelime "öğrenilenler"den çıkarıldı, tekrar karşına çıkacak.`;
+  }
+  if(quiz.opts.daily){
+    p.daily.quizDone = true;
+    const t = today(), y = yesterday();
+    if(p.lastStreakDay!==t){
+      p.streak = (p.lastStreakDay===y) ? (p.streak||0)+1 : 1;
+      p.lastStreakDay = t;
+    }
+  }
+  const leveled = checkLevelUp(p, true);
+  saveState();
+  const pct = Math.round(ok/total*100);
+  $("qr-emoji").textContent = pct>=80 ? "🏆" : pct>=50 ? "💪" : "📖";
+  $("qr-score").textContent = `${ok} / ${total}`;
+  let msg = pct>=80 ? "Harika iş! Doğru bildiklerin öğrenildi olarak işaretlendi." :
+            pct>=50 ? "İyi gidiyorsun. Yanlışların yarın tekrar karşına çıkabilir." :
+            "Sorun değil — bu kelimeler tekrar karşına çıkacak.";
+  if(!quiz.opts.markLearned && !quiz.opts.review) msg = "Alıştırma tamamlandı.";
+  if(leveled) msg += ` 🎉 Tebrikler, Seviye ${p.level}'e yükseldin!`;
+  $("qr-detail").textContent = msg + extra;
+  $("qr-words").innerHTML = quiz.qs.map(q=>{
+    const ok = quiz.correct.includes(q.wi);
+    return `<div class="word-row"><span class="w">${esc(wFor(q.wi,S.activeLang))} <span class="m" style="font-weight:400">— ${esc(wTr(q.wi))}</span></span><span>${ok?"✅":"❌"}</span></div>`;
+  }).join("");
+  quiz = null;
+  show("scr-quizresult");
+  /* Seviye atlandıysa motivasyon pop-up'ı da patlasın */
+  if(leveled) setTimeout(()=>showMotiv(p.level-1, null), 500);
+}
+function checkLevelUp(p, allowMulti){
+  let leveled = false;
+  while(p.level < LEVEL_COUNT && levelWords(p.level).every(i=>isDone(p,i))){
+    p.level++; leveled = true;
+    if(!allowMulti) break;
+  }
+  return leveled;
+}
+
+/* ============ SEVİYELER ============ */
+let curLevel = null;
+function showLevels(){
+  const p = P();
+  $("level-grid").innerHTML = Array.from({length:LEVEL_COUNT},(_,k)=>{
+    const lv = k+1;
+    const done = levelWords(lv).filter(i=>isDone(p,i)).length;
+    const locked = lv > p.level;
+    return `<div class="level-tile ${locked?"locked":""} ${lv===p.level?"current":""}" ${locked?"":`onclick="showLevelDetail(${lv})"`}>
+      <div class="lv">${locked?"🔒":""} ${lv}</div>
+      <div class="cnt">${done}/${LEVEL_SIZE}</div>
+      <div class="progress-wrap" style="height:5px"><div class="progress-bar" style="width:${done/LEVEL_SIZE*100}%"></div></div>
+    </div>`;
+  }).join("");
+  show("scr-levels");
+}
+function showLevelDetail(lv){
+  curLevel = lv;
+  const p = P();
+  const ws = levelWords(lv);
+  const done = ws.filter(i=>isDone(p,i)).length;
+  $("ld-title").textContent = `Seviye ${lv}`;
+  $("ld-sub").textContent = `${done}/${LEVEL_SIZE} kelime tamamlandı. Quiz yaparak kelimeleri "öğrenildi" işaretleyebilirsin.`;
+  $("ld-list").innerHTML = ws.map(i=>{
+    let tag = "";
+    if(p.learned.includes(i)) tag = `<span class="tag learned">öğrenildi</span>`;
+    else if(p.known.includes(i)) tag = `<span class="tag known">biliyor</span>`;
+    return `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))}${tag}</span><span class="m">${esc(wTr(i))}</span></div>`;
+  }).join("");
+  show("scr-leveldetail");
+}
+function startLevelQuiz(){
+  const p = P();
+  const ws = levelWords(curLevel);
+  const notDone = ws.filter(i=>!isDone(p,i));
+  const pick = notDone.length>=DAILY_COUNT ? sample(notDone,DAILY_COUNT)
+             : [...notDone, ...sample(ws.filter(i=>!notDone.includes(i)), Math.min(DAILY_COUNT-notDone.length, ws.length-notDone.length))];
+  quizStart(pick, { markLearned:true });
+}
+
+/* ============ TEKRAR QUİZİ ============ */
+function startReview(){
+  const p = P();
+  if(p.learned.length<4){ alert("Tekrar quizi için önce en az 4 kelime öğrenmelisin. Günlük kelimelerle başla!"); return; }
+  quizStart(sample(p.learned, Math.min(DAILY_COUNT, p.learned.length)), { review:true });
+}
+
+/* ============ KELİMELERİM ============ */
+let learnedMode = "learned";
+function showLearned(){ learnedTab("learned"); show("scr-learned"); }
+function learnedTab(mode){
+  learnedMode = mode;
+  $("tab-learned").className = "tab"+(mode==="learned"?" active":"");
+  $("tab-known").className = "tab"+(mode==="known"?" active":"");
+  const p = P();
+  const list = mode==="learned" ? p.learned : p.known;
+  if(list.length===0){
+    $("learned-list").innerHTML = `<div class="empty">${mode==="learned"?"Henüz öğrenilen kelime yok.<br>Günlük kelimelerle başla! 📅":"Henüz \"biliyorum\" dediğin kelime yok."}</div>`;
+    return;
+  }
+  $("learned-list").innerHTML = list.slice().sort((a,b)=>a-b).map(i=>
+    `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))} <span class="tag ${mode==="learned"?"learned":"known"}">S${levelOf(i)}</span></span><span class="m">${esc(wTr(i))}</span></div>`).join("");
+}
+
+/* ============ DİL DEĞİŞTİRME ============ */
+function openLangModal(){
+  $("modal-langs").innerHTML = LANG_KEYS.map(k=>{
+    const has = !!S.langs[k];
+    const info = has ? `Seviye ${S.langs[k].level} · ${S.langs[k].learned.length} öğrenildi` : "Yeni — seviye testi gerekir";
+    return `<div class="lang-opt ${S.activeLang===k?"sel":""}" onclick="switchLang('${k}')">
+      <span class="flag">${LANGS[k].flag}</span><span>${LANGS[k].name}<br><small style="color:var(--muted);font-weight:500">${info}</small></span></div>`;
+  }).join("");
+  $("lang-modal").classList.add("open");
+}
+function closeLangModal(){ $("lang-modal").classList.remove("open"); }
+function switchLang(k){
+  closeLangModal();
+  if(S.langs[k]){ S.activeLang = k; saveState(); showHome(); }
+  else { S.activeLang = k; saveState(); startPlacement(k); }
+}
+
+/* ============ BAŞLANGIÇ ============ */
+loadState();
+if(S && S.activeLang && S.langs[S.activeLang]){
+  showHome();
+} else {
+  renderOnboardLangs();
+  show("scr-onboard");
+}
+</script>
+</body>
+</html>
