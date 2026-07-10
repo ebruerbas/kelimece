@@ -6,19 +6,19 @@ Uygulamanın kimliği: oyunlaştırmaya kaçmadan "her gün 10 dakikaya değer" 
 
 ## Faz 1 — Güvence (teknik temel)
 
-- [ ] JSON yedekle / geri yükle (ilerleme tek kopyada ve kırılgan — en büyük risk)
-- [ ] PWA: manifest + service worker (telefona kurulum, çevrimdışı, kalıcı depolama)
-- [ ] Günlük aktivite kaydını başlat (ileriki istatistik ekranının hammaddesi — kayıt birikmeden grafik olmaz)
-- [ ] Yazma sorularında aksan toleransı (über=uber, café=cafe)
+- [x] JSON yedekle / geri yükle (ilerleme tek kopyada ve kırılgan — en büyük risk)
+- [x] PWA: manifest + service worker (telefona kurulum, çevrimdışı, kalıcı depolama)
+- [x] Günlük aktivite kaydını başlat (ileriki istatistik ekranının hammaddesi — kayıt birikmeden grafik olmaz)
+- [x] Yazma sorularında aksan toleransı (über=uber, café=cafe)
 
 ## Faz 2 — His ve kimlik
 
-- [ ] Seviyelere tema isimleri (Seviye 4 → "Duygular"; sıfır içerik maliyeti, harita hissi)
-- [ ] Doğru/yanlış anına mikro animasyon (prefers-reduced-motion uyumlu)
-- [ ] Seri affı: haftada 1 kaçan gün telafisi (Mece'nin karakteriyle uyumlu)
-- [ ] Seviye testine Mece eşliği (ilk 2 dakikada karakter sahnede olsun)
-- [ ] "Biliyorum" düğmesine ilk kullanım açıklaması
-- [ ] alert() yerine uygulamanın kendi modalı
+- [x] Seviyelere tema isimleri (Seviye 4 → "Duygular"; sıfır içerik maliyeti, harita hissi)
+- [x] Doğru/yanlış anına mikro animasyon (prefers-reduced-motion uyumlu)
+- [x] Seri affı: haftada 1 kaçan gün telafisi (Mece'nin karakteriyle uyumlu)
+- [x] Seviye testine Mece eşliği (ilk 2 dakikada karakter sahnede olsun)
+- [x] "Biliyorum" düğmesine ilk kullanım açıklaması
+- [x] alert() yerine uygulamanın kendi modalı
 
 ## Faz 3 — Platform cilası
 
