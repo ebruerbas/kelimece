@@ -90,6 +90,9 @@
   .topbar .brand span { color: var(--accent); }
   .brand-bird { flex-shrink: 0; display: block; }
   .hero-illo { display: block; width: 100%; max-width: 330px; margin: -4px auto 10px; }
+  .mece-bubble { position: relative; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 10px 14px; font-size: 13.5px; line-height: 1.45; max-width: 320px; margin: 0 auto; text-align: center; }
+  .mece-bubble::after { content: ""; position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%) rotate(45deg); width: 12px; height: 12px; background: var(--card); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .feedback .mim svg { vertical-align: -6px; margin-right: 6px; }
   .pills { display: flex; gap: 8px; align-items: center; }
   .pill {
     display: inline-flex; align-items: center; gap: 5px;
@@ -238,7 +241,8 @@
         <div class="pill" id="pill-lang" onclick="openLangModal()"></div>
       </div>
     </div>
-    <svg class="hero-illo" viewBox="0 0 360 252" role="img" aria-label="Kelime Kuşu büyük bir kitabın üzerinde">
+    <div class="mece-bubble" id="mece-bubble"></div>
+    <svg class="hero-illo" viewBox="0 0 360 252" role="img" aria-label="Mece büyük bir kitabın üzerinde">
       <path d="M180,202 C134,186 84,188 40,201 L40,231 C84,218 134,216 180,232 Z" fill="#6366f1"/>
       <path d="M180,202 C226,186 276,188 320,201 L320,231 C276,218 226,216 180,232 Z" fill="#6366f1"/>
       <path d="M180,196 C138,182 92,184 50,196 L50,220 C92,208 138,206 180,220 Z" fill="#fffdf6" stroke="#e4d9c4" stroke-width="1"/>
@@ -948,6 +952,49 @@ function finishPlacement(level, passedAll){
 }
 
 /* ============ ANA SAYFA ============ */
+/* ============ MECE (maskot kişiliği) ============ */
+/* Mece'nin mimikleri: rozet yüzü üreten tek fonksiyon. mood: happy | cheer | oops | party */
+function birdFace(mood, size){
+  size = size || 26;
+  const eyes = {
+    happy: "<circle cx='11' cy='16' r='2.9' fill='#2b2013'/><circle cx='12' cy='15' r='1' fill='#fff'/><circle cx='21' cy='16' r='2.9' fill='#2b2013'/><circle cx='22' cy='15' r='1' fill='#fff'/>",
+    cheer: "<path d='M8.5,17 Q11,14 13.5,17' stroke='#2b2013' stroke-width='1.9' fill='none' stroke-linecap='round'/><path d='M18.5,17 Q21,14 23.5,17' stroke='#2b2013' stroke-width='1.9' fill='none' stroke-linecap='round'/>",
+    oops: "<path d='M8.5,15.5 Q11,17.5 13.5,15.5' stroke='#2b2013' stroke-width='1.9' fill='none' stroke-linecap='round'/><path d='M18.5,15.5 Q21,17.5 23.5,15.5' stroke='#2b2013' stroke-width='1.9' fill='none' stroke-linecap='round'/>"
+  };
+  eyes.party = eyes.cheer;
+  const beak = (mood==="cheer"||mood==="party")
+    ? "<path d='M16,20 L21.5,23.5 L16,27.5 L10.5,23.5 Z' fill='#e8622c'/><path d='M11.8,24.3 L20.2,24.3 L16,27.1 Z' fill='#7a3414'/>"
+    : "<path d='M16,20 L21.5,23.5 L16,27.5 L10.5,23.5 Z' fill='#e8622c'/>";
+  const extra = mood==="party"
+    ? "<circle cx='3' cy='12' r='1.6' fill='#ff8fa3'/><circle cx='29' cy='10' r='1.6' fill='#5ec9c0'/><circle cx='27.5' cy='27' r='1.6' fill='#ffd166'/><circle cx='4' cy='26' r='1.6' fill='#6366f1'/>"
+    : mood==="oops"
+    ? "<path d='M27.5,12 q1.7,2.5 0,3.8 q-1.7,-1.3 0,-3.8' fill='#5ec9c0'/>"
+    : "";
+  return "<svg width='"+size+"' height='"+size+"' viewBox='0 0 32 32' aria-hidden='true'>"
+    + "<circle cx='9' cy='7' r='2.6' fill='#ff8fa3'/><circle cx='16' cy='4.5' r='2.6' fill='#ffd166'/><circle cx='23' cy='7' r='2.6' fill='#5ec9c0'/>"
+    + "<circle cx='16' cy='18.5' r='13' fill='#f4a950'/>"
+    + (eyes[mood]||eyes.happy) + beak
+    + "<ellipse cx='7.5' cy='21' rx='2.4' ry='1.6' fill='#ff8fa3' opacity='0.65'/><ellipse cx='24.5' cy='21' rx='2.4' ry='1.6' fill='#ff8fa3' opacity='0.65'/>"
+    + extra + "</svg>";
+}
+/* Ana sayfa konuşma balonu: duruma göre (kutlama > özlem > seri > günün lafı) */
+const MECE_HI = [
+  "Bugün 10 kelime, yarın koca bir cümle. Hadi bakalım!",
+  "Gagam hazır, kelimeler hazır. Ya sen?",
+  "Az az ama her gün. Sırrımız bu — kimseye söyleme.",
+  "Bir kelime daha öğrenirsen tüylerim kabarır, haberin olsun.",
+  "Kitabımın üstünde seni bekliyordum. Başlayalım mı?",
+  "Kelimeler uçar, sen yakala. Uçmak benden, yakalamak senden.",
+  "Kendine 10 dakika ayır, gerisini ben hallederim."
+];
+function meceLine(p){
+  const t = today();
+  if(p.daily && p.daily.date===t && p.daily.quizDone) return "Bugünü tamamladın! Gurur duyma sırası bende. 🧡";
+  if(p.lastStreakDay && p.lastStreakDay!==t && p.lastStreakDay!==yesterday() && (p.learned.length||p.known.length)) return "Seni özledim! Kitabımın üstünde tek başıma bekledim. Hoş geldin. 🧡";
+  if((p.streak||0)>=3) return "🔥 " + p.streak + " gün üst üste! Tüylerim gururla kabardı.";
+  return MECE_HI[Math.floor(Date.now()/86400000) % MECE_HI.length];
+}
+
 function showHome(){
   const p = P();
   $("pill-lang").innerHTML = LANGS[S.activeLang].flag + " " + LANGS[S.activeLang].name;
@@ -966,6 +1013,7 @@ function showHome(){
   else $("daily-desc").textContent = "Bugünün 10 kelimesi seni bekliyor";
   const tc = Object.keys(toughOf(p)).length;
   $("review-desc").textContent = tc ? `Zorlandığın ${tc} kelime seni bekliyor 💪` : "Öğrendiklerin kalıcı mı? Kendini sına";
+  $("mece-bubble").textContent = meceLine(p);
   /* Haftalık sürpriz doğrulama quizi */
   const verifyDue = p.known.length>=5 && (!p.lastVerify || Date.now()-p.lastVerify > 7*86400000);
   $("verify-card").style.display = verifyDue ? "flex" : "none";
@@ -1132,8 +1180,8 @@ function markResult(ok){
 }
 function showFeedback(ok, answer){
   const f = $("quiz-feedback");
-  if(ok){ f.textContent = "Doğru! 🎉"; f.className = "feedback ok"; }
-  else { f.textContent = answer ? `Yanlış — doğrusu: ${answer}` : "Yanlış 😕"; f.className = "feedback no"; }
+  if(ok){ f.innerHTML = "<span class='mim'>"+birdFace("cheer",22)+"</span>Doğru! 🎉"; f.className = "feedback ok"; }
+  else { f.innerHTML = "<span class='mim'>"+birdFace("oops",22)+"</span>" + (answer ? "Yanlış — doğrusu: "+esc(answer) : "Yanlış — olsun, tekrar karşına çıkacak!"); f.className = "feedback no"; }
 }
 function quizNext(){
   $("quiz-check").disabled = false;
@@ -1174,12 +1222,13 @@ function finishQuiz(){
   const leveled = checkLevelUp(p, true);
   saveState();
   const pct = Math.round(ok/total*100);
-  $("qr-emoji").textContent = pct>=80 ? "🏆" : pct>=50 ? "💪" : "📖";
+  $("qr-emoji").innerHTML = birdFace(pct>=80 ? "party" : pct>=50 ? "cheer" : "oops", 64);
   $("qr-score").textContent = `${ok} / ${total}`;
-  let msg = pct>=80 ? "Harika iş! Doğru bildiklerin öğrenildi olarak işaretlendi." :
-            pct>=50 ? "İyi gidiyorsun. Yanlışların yarın tekrar karşına çıkabilir." :
-            "Sorun değil — bu kelimeler tekrar karşına çıkacak.";
+  let msg = pct>=80 ? "Mece zıplıyor: harikaydın! Doğru bildiklerin öğrenildi olarak işaretlendi." :
+            pct>=50 ? "İyi gidiyorsun, Mece arkanda. Yanlışların tekrar karşına çıkacak." :
+            "Sorun değil — bu kelimelere Mece'yle birlikte yine bakacaksınız.";
   if(!quiz.opts.markLearned && !quiz.opts.review) msg = "Alıştırma tamamlandı.";
+  if(quiz.opts.daily) msg += " Bugünlük bu kadar — yarın aynı yerde, kitabın üstünde! 🧡";
   if(leveled) msg += ` 🎉 Tebrikler, Seviye ${p.level}'e yükseldin!`;
   $("qr-detail").textContent = msg + extra;
   $("qr-words").innerHTML = quiz.qs.map(q=>{
