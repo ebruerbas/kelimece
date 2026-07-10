@@ -144,8 +144,14 @@
   .q-opt.correct { border-color: var(--green); background: var(--green-soft); }
   .q-opt.wrong { border-color: var(--red); background: var(--red-soft); }
   .feedback { text-align: center; font-weight: 700; margin-top: 14px; min-height: 22px; font-size: 15px; }
-  .feedback.ok { color: var(--green); }
-  .feedback.no { color: var(--red); }
+  .feedback.ok { color: var(--green); animation: popIn .35s ease; }
+  .feedback.no { color: var(--red); animation: popIn .35s ease; }
+  .q-opt.correct { animation: popIn .3s ease; }
+  .q-opt.wrong { animation: shakeX .3s ease; }
+  @keyframes popIn { 0% { transform: scale(.5); opacity: 0; } 60% { transform: scale(1.12); } 100% { transform: scale(1); opacity: 1; } }
+  @keyframes shakeX { 0%, 100% { transform: none; } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+  .level-tile .lnm { font-size: 10.5px; color: var(--muted); margin: 1px 0 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 
   /* levels */
   .level-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
@@ -217,6 +223,7 @@
 
   <!-- PLACEMENT TEST -->
   <div id="scr-test" class="screen">
+    <div id="test-mece" style="text-align:center;margin-bottom:6px"></div>
     <div class="counter" id="test-counter"></div>
     <div class="progress-wrap" style="margin-bottom:22px"><div class="progress-bar" id="test-progress" style="width:0%"></div></div>
     <div class="card">
@@ -229,7 +236,7 @@
   <!-- TEST RESULT -->
   <div id="scr-testresult" class="screen">
     <div class="card" style="text-align:center">
-      <div class="result-emoji">🎯</div>
+      <div class="result-emoji" id="testresult-mece">🎯</div>
       <h2 style="margin-top:12px">Seviyen belirlendi!</h2>
       <div class="result-score" id="testresult-level" style="color:var(--accent)"></div>
       <p class="sub" id="testresult-detail"></p>
@@ -814,6 +821,9 @@ function hasSentence(wi){ const s = SENTENCES[wTr(wi)]; return !!(s && s[S.activ
 const LANG_KEYS = ["en","de","es","fr","it"];
 const COL = { tr:0, en:1, de:2, es:3, fr:4, it:5 };
 const LEVEL_COUNT = WORDS.length / LEVEL_SIZE;
+/* Her 20'lik bloğun teması — WORDS sırasıyla birebir hizalı */
+const LEVEL_NAMES = ["İlk Kelimeler","Günlük Hayat","Temel Fiiller","Duygular","İş ve Kariyer","Eylem Fiilleri","Soyut Kavramlar","Toplum ve Ekonomi","Kültür ve Fikirler","İkna ve Keşif","Düşünce Fiilleri","Nüanslar","Akademik Dil","Karakter","Derin Kavramlar","Usta İşi"];
+function levelName(lv){ return LEVEL_NAMES[lv-1] || ""; }
 const DAILY_COUNT = 10;
 
 const $ = id => document.getElementById(id);
@@ -821,7 +831,8 @@ function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.r
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 function sample(a,n){ return shuffle(a).slice(0,n); }
 function today(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
-function yesterday(){ const d=new Date(); d.setDate(d.getDate()-1); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function yesterday(){ return daysAgo(1); }
+function daysAgo(n){ const d=new Date(); d.setDate(d.getDate()-n); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 function norm(s){ return s.toLowerCase().trim().replace(/^to\s+/,"").replace(/^sich\s+/,"").replace(/œ/g,"oe").replace(/ß/g,"ss").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\s+/g," "); }
 function esc(s){ const d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
 function levelOf(i){ return Math.floor(i/LEVEL_SIZE)+1; }
@@ -918,6 +929,7 @@ $("motiv-btn").addEventListener("click", ()=>{
 });
 function renderTestQ(){
   const wi = test.qs[test.i];
+  $("test-mece").innerHTML = birdFace("happy", 40);
   $("test-counter").textContent = `Seviye ${test.level} testi — Soru ${test.i+1} / ${TEST_PER_LEVEL}`;
   /* Çubuk sadece içinde bulunulan seviyenin ilerlemesini gösterir */
   $("test-progress").style.width = (test.i/TEST_PER_LEVEL*100)+"%";
@@ -930,8 +942,8 @@ function renderTestQ(){
 function testAnswer(sel, correct, btn){
   document.querySelectorAll("#test-opts .q-opt").forEach(b=>b.onclick=null);
   test.totalQ++;
-  if(sel===correct){ btn.classList.add("correct"); test.correct++; test.totalOk++; }
-  else { btn.classList.add("wrong"); }
+  if(sel===correct){ btn.classList.add("correct"); test.correct++; test.totalOk++; $("test-mece").innerHTML = birdFace("cheer", 40); }
+  else { btn.classList.add("wrong"); $("test-mece").innerHTML = birdFace("oops", 40); }
   setTimeout(()=>{
     test.i++;
     /* Kalan sorularla geçme şansı kalmadıysa seviyeyi erken bitir */
@@ -957,7 +969,8 @@ function finishPlacement(level, passedAll){
   S.langs[test.lang] = newProfile(level);
   S.activeLang = test.lang;
   saveState();
-  $("testresult-level").textContent = "Seviye " + level;
+  $("testresult-mece").innerHTML = birdFace(passedAll ? "party" : "cheer", 64);
+  $("testresult-level").textContent = `Seviye ${level} · ${levelName(level)}`;
   const stat = `Toplam ${test.totalQ} soruda ${test.totalOk} doğru yaptın.`;
   $("testresult-detail").textContent = passedAll
     ? `Tüm seviyeleri geçtin, etkileyici! ${stat} En üst seviyeden başlıyorsun.`
@@ -989,7 +1002,7 @@ function importBackup(input){
       saveState();
       showHome();
       showMotiv2("🎉","Yedek geri yüklendi!","Kaldığın yerden devam — Mece de seni bekliyordu.", null);
-    } catch(e){ alert("Bu dosya bir kelimece yedeği değil ya da bozuk."); }
+    } catch(e){ showMotiv2("🤔","Bu dosya olmadı","Seçtiğin dosya bir kelimece yedeği değil ya da bozuk görünüyor.", null); }
   };
   r.readAsText(f);
 }
@@ -1046,7 +1059,7 @@ function showHome(){
   $("st-known").textContent = p.known.length;
   const lw = levelWords(p.level);
   const done = lw.filter(i=>isDone(p,i)).length;
-  $("home-level-label").textContent = `Seviye ${p.level} ilerlemesi`;
+  $("home-level-label").textContent = `Seviye ${p.level} · ${levelName(p.level)}`;
   $("home-level-count").textContent = `${done} / ${LEVEL_SIZE} kelime`;
   $("home-level-bar").style.width = (done/LEVEL_SIZE*100)+"%";
   const d = p.daily;
@@ -1081,7 +1094,7 @@ function startDaily(){
     return;
   }
   const cand = dailyCandidates(p);
-  if(cand.length===0){ alert("Tebrikler! Bu dilde tüm kelimeleri tamamladın 🎉"); return; }
+  if(cand.length===0){ showMotiv2("🏆","İnanılmaz — hepsi bitti!","Bu dilde öğrenilecek kelime kalmadı. Mece gururdan uçuyor! İstersen yeni bir dile başla.", null); return; }
   dailySel = { queue: cand, picked: [], pos: 0 };
   show("scr-daily");
   renderDailyCard();
@@ -1098,6 +1111,11 @@ function dailyKnow(knows){
   const wi = dailySel.queue[dailySel.pos];
   if(knows){
     p.known.push(wi);
+    /* İlk "Biliyorum"da bir kerelik açıklama — düğmenin sonucu belirsiz kalmasın */
+    if(!S.knowInfoSeen){
+      S.knowInfoSeen = true;
+      showMotiv2("💡", '"Biliyorum" ne yapar?', 'Bu kelime "bildiklerin" listesine yazıldı ve sana ayrıca öğretilmeyecek. Ama dikkat: Mece arada sürpriz doğrulama quiziyle kontrol eder. Emin değilsen "Bilmiyorum" demek daha kârlı 😉', null);
+    }
   } else {
     dailySel.picked.push(wi);
     $("daily-meaning").style.visibility = "visible";
@@ -1259,7 +1277,13 @@ function finishQuiz(){
     p.daily.quizDone = true;
     const t = today(), y = yesterday();
     if(p.lastStreakDay!==t){
-      p.streak = (p.lastStreakDay===y) ? (p.streak||0)+1 : 1;
+      if(p.lastStreakDay===y){ p.streak = (p.streak||0)+1; }
+      else if((p.streak||0)>0 && p.lastStreakDay===daysAgo(2) && (!p.lastAmnesty || p.lastAmnesty <= daysAgo(7))){
+        /* Seri affı: haftada 1 kez, tek günlük boşluğu Mece görmezden gelir */
+        p.streak++; p.lastAmnesty = t;
+        extra += " Dün yoktun ama Mece seni affetti — serin bozulmadı! 🧡";
+      }
+      else { p.streak = 1; }
       p.lastStreakDay = t;
     }
   }
@@ -1303,6 +1327,7 @@ function showLevels(){
     const locked = lv > p.level;
     return `<div class="level-tile ${locked?"locked":""} ${lv===p.level?"current":""}" ${locked?"":`onclick="showLevelDetail(${lv})"`}>
       <div class="lv">${locked?"🔒":""} ${lv}</div>
+      <div class="lnm">${levelName(lv)}</div>
       <div class="cnt">${done}/${LEVEL_SIZE}</div>
       <div class="progress-wrap" style="height:5px"><div class="progress-bar" style="width:${done/LEVEL_SIZE*100}%"></div></div>
     </div>`;
@@ -1314,7 +1339,7 @@ function showLevelDetail(lv){
   const p = P();
   const ws = levelWords(lv);
   const done = ws.filter(i=>isDone(p,i)).length;
-  $("ld-title").textContent = `Seviye ${lv}`;
+  $("ld-title").textContent = `Seviye ${lv} · ${levelName(lv)}`;
   $("ld-sub").textContent = `${done}/${LEVEL_SIZE} kelime tamamlandı. Anlamlar quiz yaptıkça açılır — hazır cevap yok!`;
   $("ld-list").innerHTML = ws.map(i=>{
     let tag = "";
@@ -1343,7 +1368,7 @@ function startReview(){
   const toughList = Object.keys(tough).map(Number).filter(wi=>!p.known.includes(wi))
     .sort((a,b)=>tough[b]-tough[a]);
   const pool = [...new Set([...toughList, ...p.learned])];
-  if(pool.length<4){ alert("Tekrar quizi için önce en az 4 kelime öğrenmelisin. Günlük kelimelerle başla!"); return; }
+  if(pool.length<4){ showMotiv2("🐣","Henüz erken","Tekrar quizi için önce en az 4 kelime öğrenmelisin. Günlük kelimelerle başla!", null); return; }
   const picked = toughList.slice(0, DAILY_COUNT);
   const rest = p.learned.filter(wi=>!picked.includes(wi));
   const need = Math.min(DAILY_COUNT, pool.length) - picked.length;
@@ -1401,7 +1426,7 @@ function speakQuiz(){ if(quiz) speakIdx(quiz.qs[quiz.i].wi); }
 /* ============ DOĞRULAMA QUİZİ ============ */
 function startVerify(){
   const p = P();
-  if(p.known.length < 5){ alert("Bunun için en az 5 tane 'biliyorum' dediğin kelime olmalı."); return; }
+  if(p.known.length < 5){ showMotiv2("🎯","Henüz erken","Bunun için en az 5 tane \"biliyorum\" dediğin kelime olmalı.", null); return; }
   quizStart(sample(p.known, 5), { verify:true });
 }
 
