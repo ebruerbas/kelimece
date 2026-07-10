@@ -305,7 +305,7 @@
     </div>
     <div class="menu-card" onclick="startReview()">
       <div class="ico">🔁</div>
-      <div><div class="tt">Tekrar Quizi</div><div class="dd">Öğrendiklerin kalıcı mı? Kendini sına</div></div>
+      <div><div class="tt">Tekrar Quizi</div><div class="dd" id="review-desc">Öğrendiklerin kalıcı mı? Kendini sına</div></div>
       <div class="arrow">›</div>
     </div>
   </div>
@@ -829,8 +829,11 @@ let S = null;
 function loadState(){ try { S = JSON.parse(localStorage.getItem("kelimece_v4")); } catch(e){ S=null; } }
 function saveState(){ localStorage.setItem("kelimece_v4", JSON.stringify(S)); }
 function P(){ return S.langs[S.activeLang]; }
-function newProfile(level){ return { level, known:[], learned:[], streak:0, lastStreakDay:null, daily:null, lastVerify:0 }; }
+function newProfile(level){ return { level, known:[], learned:[], streak:0, lastStreakDay:null, daily:null, lastVerify:0, tough:{} }; }
 function isDone(p,i){ return p.learned.includes(i)||p.known.includes(i); }
+/* Akıllı tekrar: yanlış yapılan kelimeler wi -> hata ağırlığı (1-5). Eski profillerde alan
+   olmayabilir, o yüzden her erişim bu yardımcıdan geçer (storage v4 korunur, alan eklemek güvenli). */
+function toughOf(p){ if(!p.tough) p.tough = {}; return p.tough; }
 
 /* ============ ONBOARDING ============ */
 let obLang = null;
@@ -961,6 +964,8 @@ function showHome(){
   if(d && d.date===today() && d.quizDone) $("daily-desc").textContent = "Bugünü tamamladın ✓ — istersen tekrar bak";
   else if(d && d.date===today()) $("daily-desc").textContent = "Bugünün kelimeleri hazır, quiz seni bekliyor";
   else $("daily-desc").textContent = "Bugünün 10 kelimesi seni bekliyor";
+  const tc = Object.keys(toughOf(p)).length;
+  $("review-desc").textContent = tc ? `Zorlandığın ${tc} kelime seni bekliyor 💪` : "Öğrendiklerin kalıcı mı? Kendini sına";
   /* Haftalık sürpriz doğrulama quizi */
   const verifyDue = p.known.length>=5 && (!p.lastVerify || Date.now()-p.lastVerify > 7*86400000);
   $("verify-card").style.display = verifyDue ? "flex" : "none";
@@ -1140,6 +1145,10 @@ function finishQuiz(){
   const p = P();
   const total = quiz.qs.length, ok = quiz.correct.length;
   let extra = "";
+  /* Akıllı tekrar: yanlış -> ağırlık +1 (max 5), doğru -> -1, sıfırlanınca listeden düşer */
+  const tough = toughOf(p);
+  quiz.wrong.forEach(wi=>{ tough[wi] = Math.min((tough[wi]||0)+1, 5); });
+  quiz.correct.forEach(wi=>{ if(tough[wi]){ if(--tough[wi]<=0) delete tough[wi]; } });
   if(quiz.opts.markLearned){
     quiz.correct.forEach(wi=>{ if(!p.learned.includes(wi)) p.learned.push(wi); });
   }
@@ -1234,8 +1243,16 @@ function startLevelQuiz(){
 /* ============ TEKRAR QUİZİ ============ */
 function startReview(){
   const p = P();
-  if(p.learned.length<4){ alert("Tekrar quizi için önce en az 4 kelime öğrenmelisin. Günlük kelimelerle başla!"); return; }
-  quizStart(sample(p.learned, Math.min(DAILY_COUNT, p.learned.length)), { review:true });
+  const tough = toughOf(p);
+  /* Zorlanılan kelimeler önce (ağırlığı yüksek olan başta), kalan yer rastgele öğrenilenlerle dolar */
+  const toughList = Object.keys(tough).map(Number).filter(wi=>!p.known.includes(wi))
+    .sort((a,b)=>tough[b]-tough[a]);
+  const pool = [...new Set([...toughList, ...p.learned])];
+  if(pool.length<4){ alert("Tekrar quizi için önce en az 4 kelime öğrenmelisin. Günlük kelimelerle başla!"); return; }
+  const picked = toughList.slice(0, DAILY_COUNT);
+  const rest = p.learned.filter(wi=>!picked.includes(wi));
+  const need = Math.min(DAILY_COUNT, pool.length) - picked.length;
+  quizStart([...picked, ...sample(rest, Math.max(0, need))], { review:true });
 }
 
 /* ============ KELİMELERİM ============ */
