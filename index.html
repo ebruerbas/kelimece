@@ -730,6 +730,33 @@ const WORDS = [
 ["tereddüt","hesitation","Zögern","vacilación","hésitation","esitazione"],
 ["fedakarlık","sacrifice","Opfer","sacrificio","sacrifice","sacrificio"]
 ];
+/* ============ ÖRNEK CÜMLELER (boşluk doldurma quizi) ============
+   Anahtar: kelimenin TR karşılığı. Değer: { dil: [hedef dilde boşluklu cümle, cümlenin TR çevirisi] }
+   PİLOT: Sadece Seviye 1 (ilk 20 kelime) ve sadece İngilizce dolduruldu — onay sonrası
+   diğer seviyeler ve diller aynı desenle eklenecek. WORDS'e dokunulmadı, indeksler bozulmadı. */
+const SENTENCES = {
+  "su":     { en: ["Can I have a glass of ___, please?", "Bir bardak su alabilir miyim?"] },
+  "ekmek":  { en: ["She bought fresh ___ from the bakery.", "Fırından taze ekmek aldı."] },
+  "ev":     { en: ["They just bought a new ___.", "Yeni bir ev satın aldılar."] },
+  "kedi":   { en: ["The ___ is sleeping on the sofa.", "Kedi kanepede uyuyor."] },
+  "köpek":  { en: ["My ___ loves to play in the park.", "Köpeğim parkta oynamayı seviyor."] },
+  "kitap":  { en: ["I read an interesting ___ last week.", "Geçen hafta ilginç bir kitap okudum."] },
+  "gün":    { en: ["It was a beautiful ___ today.", "Bugün güzel bir gündü."] },
+  "gece":   { en: ["The stars shine bright at ___.", "Yıldızlar gece parlak parlar."] },
+  "anne":   { en: ["My ___ makes the best soup.", "Annem en güzel çorbayı yapar."] },
+  "baba":   { en: ["His ___ works as an engineer.", "Babası mühendis olarak çalışıyor."] },
+  "el":     { en: ["She held his ___ tightly.", "Elini sıkıca tuttu."] },
+  "göz":    { en: ["There was something in his ___.", "Gözünde bir şey vardı."] },
+  "güneş":  { en: ["The ___ rises in the east.", "Güneş doğudan doğar."] },
+  "ay":     { en: ["The ___ was full last night.", "Dün gece ay doluydu."] },
+  "yıldız": { en: ["I saw a shooting ___ last night.", "Dün gece bir kayan yıldız gördüm."] },
+  "ağaç":   { en: ["We planted a ___ in the garden.", "Bahçeye bir ağaç diktik."] },
+  "çiçek":  { en: ["She gave me a beautiful ___.", "Bana güzel bir çiçek verdi."] },
+  "deniz":  { en: ["We swam in the ___ all day.", "Bütün gün denizde yüzdük."] },
+  "süt":    { en: ["He drinks a glass of ___ every morning.", "Her sabah bir bardak süt içer."] },
+  "elma":   { en: ["An ___ a day keeps the doctor away.", "Günde bir elma doktoru uzak tutar."] }
+};
+function hasSentence(wi){ const s = SENTENCES[wTr(wi)]; return !!(s && s[S.activeLang]); }
 /* ============ YARDIMCILAR ============ */
 const LANG_KEYS = ["en","de","es","fr","it"];
 const COL = { tr:0, en:1, de:2, es:3, fr:4, it:5 };
@@ -748,6 +775,16 @@ function levelOf(i){ return Math.floor(i/LEVEL_SIZE)+1; }
 function levelWords(lv){ const s=(lv-1)*LEVEL_SIZE; return Array.from({length:LEVEL_SIZE},(_,k)=>s+k); }
 function wTr(i){ return WORDS[i][COL.tr]; }
 function wFor(i,lang){ return WORDS[i][COL[lang]]; }
+/* Çeldiricileri (yanlış şıkları) TÜM kelime havuzundan değil, hedef kelimeyle AYNI SEVİYEDEN
+   seçer. Seviyeler zaten tema/zorluk bazlı gruplu olduğu için (ör. Seviye 4 = duygular,
+   Seviye 7 = soyut isimler), aynı seviyeden çeldiriciler anlam ve biçim olarak birbirine
+   yakın çıkar — sezgiyle/kökle eleyip doğru cevabı bulmak zorlaşır. cmp(k), çeldiricinin
+   doğru cevapla aynı anlama gelmemesini garanti eden karşılaştırma fonksiyonu. */
+function pickDistractors(wi, n, cmp){
+  let pool = levelWords(levelOf(wi)).filter(k=>k!==wi && cmp(k)!==cmp(wi));
+  if(pool.length < n) pool = WORDS.map((_,k)=>k).filter(k=>k!==wi && cmp(k)!==cmp(wi));
+  return sample(pool, n);
+}
 
 /* ============ DURUM ============ */
 let S = null;
@@ -775,10 +812,11 @@ $("btn-start-test").addEventListener("click", ()=>{
 });
 
 /* ============ SEVİYE TESTİ (adaptif) ============
-   Her seviyeden 6 soru sorulur. 6'da 5 doğru → bir üst seviyeye geç.
-   Geçemediğin seviye, senin seviyendir. */
-const TEST_PER_LEVEL = 6;
-const TEST_PASS = 5;
+   Her seviyeden 8 soru sorulur. 8'de 7 doğru → bir üst seviyeye geç.
+   Geçemediğin seviye, senin seviyendir. (Çeldiriciler artık aynı seviyeden seçildiği için
+   eskisinden daha zor eleniyor; eşik de 5/6'dan 7/8'e çıkarılarak biraz sıkılaştırıldı.) */
+const TEST_PER_LEVEL = 8;
+const TEST_PASS = 7;
 let test = null;
 function startPlacement(lang){
   test = { lang, level:1, qs: sample(levelWords(1), TEST_PER_LEVEL), i:0, correct:0, totalQ:0, totalOk:0 };
@@ -825,7 +863,7 @@ function renderTestQ(){
   /* Çubuk sadece içinde bulunulan seviyenin ilerlemesini gösterir */
   $("test-progress").style.width = (test.i/TEST_PER_LEVEL*100)+"%";
   $("test-word").textContent = wFor(wi, test.lang);
-  const distract = sample(WORDS.map((_,k)=>k).filter(k=>k!==wi && wTr(k)!==wTr(wi)), 3);
+  const distract = pickDistractors(wi, 3, wTr);
   const opts = shuffle([wi, ...distract]);
   $("test-opts").innerHTML = opts.map(k=>
     `<button class="q-opt" onclick="testAnswer(${k},${wi},this)">${esc(wTr(k))}</button>`).join("");
@@ -964,9 +1002,16 @@ function startDailyQuiz(){
 
 /* ============ QUIZ MOTORU ============ */
 let quiz = null;
+/* 4 soru tipi arasında sırayla dağıt; "fill" (boşluk doldurma) sadece o kelime için
+   örnek cümle varsa kullanılır, yoksa mevcut 3 tipe düşer (SENTENCES kapsamı büyüdükçe
+   otomatik olarak daha çok "fill" sorusu çıkar). */
+function quizPickType(wi, k){
+  const t = ["mc","mcrev","typed","fill"][k%4];
+  if(t==="fill" && !hasSentence(wi)) return ["mc","mcrev","typed"][k%3];
+  return t;
+}
 function quizStart(wordIdxs, opts){
-  const types = ["mc","mcrev","typed"];
-  const qs = shuffle(wordIdxs).map((wi,k)=>({ wi, type: types[k%3] }));
+  const qs = shuffle(wordIdxs).map((wi,k)=>({ wi, type: quizPickType(wi,k) }));
   quiz = { qs: shuffle(qs), i:0, correct:[], wrong:[], opts };
   show("scr-quiz");
   renderQuizQ();
@@ -983,21 +1028,31 @@ function renderQuizQ(){
   $("quiz-type-area").style.display = "none";
   $("quiz-input").value = "";
   $("quiz-speak-wrap").style.display = q.type==="mc" ? "block" : "none";
+  $("quiz-word").style.fontSize = "28px";
+  $("quiz-word").style.fontWeight = "800";
 
   if(q.type==="mc"){
     $("quiz-prompt").textContent = "Bu kelimenin Türkçesi ne?";
     $("quiz-word").textContent = wFor(q.wi, lang);
-    const distract = sample(WORDS.map((_,k)=>k).filter(k=>k!==q.wi && wTr(k)!==wTr(q.wi)), 3);
+    const distract = pickDistractors(q.wi, 3, wTr);
     const options = shuffle([q.wi, ...distract]);
     $("quiz-opts").innerHTML = options.map(k=>
       `<button class="q-opt" onclick="quizAnswerMC(${k===q.wi},this)">${esc(wTr(k))}</button>`).join("");
   } else if(q.type==="mcrev"){
     $("quiz-prompt").textContent = `"${wTr(q.wi)}" kelimesinin ${LANGS[lang].name} karşılığı hangisi?`;
     $("quiz-word").textContent = wTr(q.wi);
-    const distract = sample(WORDS.map((_,k)=>k).filter(k=>k!==q.wi && wFor(k,lang)!==wFor(q.wi,lang)), 3);
+    const distract = pickDistractors(q.wi, 3, k=>wFor(k,lang));
     const options = shuffle([q.wi, ...distract]);
     $("quiz-opts").innerHTML = options.map(k=>
       `<button class="q-opt" onclick="quizAnswerMC(${k===q.wi},this)">${esc(wFor(k,lang))}</button>`).join("");
+  } else if(q.type==="fill"){
+    const [sentence, trSentence] = SENTENCES[wTr(q.wi)][lang];
+    $("quiz-prompt").textContent = `Boşluğu ${LANGS[lang].name} olarak doldur — Türkçesi: "${trSentence}"`;
+    $("quiz-word").innerHTML = esc(sentence).replace("___", '<span style="color:var(--accent)">___</span>');
+    $("quiz-word").style.fontSize = "19px";
+    $("quiz-word").style.fontWeight = "600";
+    $("quiz-type-area").style.display = "block";
+    setTimeout(()=>$("quiz-input").focus(), 50);
   } else {
     $("quiz-prompt").textContent = `"${wTr(q.wi)}" kelimesini ${LANGS[lang].name} yaz`;
     $("quiz-word").textContent = wTr(q.wi);
