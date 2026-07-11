@@ -30,9 +30,28 @@
     --amber: #f59e0b;
     --amber-soft: #fffbeb;
   }
-  /* Karanlık tema: sistem tercihini izler (Faz 3) */
+  /* Kullanıcı "Koyu" seçtiyse (sistem ayarından bağımsız) */
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #171512;
+    --card: #201d19;
+    --border: #363129;
+    --text: #ece8e2;
+    --muted: #a19a90;
+    --accent: #818cf8;
+    --accent-soft: #272a45;
+    --mece: #f47b45;
+    --green: #34d399;
+    --green-soft: #112b21;
+    --red: #f87171;
+    --red-soft: #321919;
+    --amber: #fbbf24;
+    --amber-soft: #2e2510;
+  }
+  :root[data-theme="light"] { color-scheme: light; }
+  /* Karanlık tema: sistem tercihini izler (kullanıcı "Açık"ı zorlamadıysa) */
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme="light"]) {
       --bg: #171512;
       --card: #201d19;
       --border: #363129;
@@ -50,8 +69,12 @@
     }
   }
   @media (prefers-color-scheme: dark) and (hover: hover) {
-    .btn.ghost:hover { background: #262320; }
-    .lang-opt:hover, .q-opt:hover { border-color: #4a453d; }
+    :root:not([data-theme="light"]) .btn.ghost:hover { background: #262320; }
+    :root:not([data-theme="light"]) .lang-opt:hover, :root:not([data-theme="light"]) .q-opt:hover { border-color: #4a453d; }
+  }
+  @media (hover: hover) {
+    :root[data-theme="dark"] .btn.ghost:hover { background: #262320; }
+    :root[data-theme="dark"] .lang-opt:hover, :root[data-theme="dark"] .q-opt:hover { border-color: #4a453d; }
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -356,6 +379,7 @@
       <div class="arrow">›</div>
     </div>
     <div style="display:flex;gap:10px;justify-content:center;margin-top:20px">
+      <button class="btn ghost small" id="theme-btn" onclick="cycleTheme()">🌓 Sistem</button>
       <button class="btn ghost small" onclick="exportBackup()">⬇ Yedekle</button>
       <button class="btn ghost small" onclick="$('import-file').click()">⬆ Geri Yükle</button>
       <input type="file" id="import-file" accept=".json,application/json" style="display:none" onchange="importBackup(this)">
@@ -1338,6 +1362,30 @@ function finishPlacement(level, passedAll){
 }
 
 /* ============ ANA SAYFA ============ */
+/* ============ TEMA (Sistem / Açık / Koyu) ============
+   Ayrı localStorage anahtarında tutulur: profil kurulmadan önce de çalışır,
+   yedek dosyasından bağımsızdır (cihaza özgü tercih). */
+const THEMES = ["system","light","dark"];
+const THEME_LABELS = { system:"🌓 Sistem", light:"☀️ Açık", dark:"🌙 Koyu" };
+function getTheme(){ const t = localStorage.getItem("kelimece_theme"); return THEMES.includes(t) ? t : "system"; }
+function applyTheme(){
+  const t = getTheme();
+  if(t==="system") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", t);
+  const btn = $("theme-btn"); if(btn) btn.textContent = THEME_LABELS[t];
+  /* Tarayıcı çubuğu rengi de seçime uysun */
+  document.querySelectorAll('meta[name="theme-color"]').forEach(m=>{
+    if(t==="light") m.content = "#fafaf9";
+    else if(t==="dark") m.content = "#171512";
+    else m.content = m.media && m.media.includes("dark") ? "#171512" : "#fafaf9";
+  });
+}
+function cycleTheme(){
+  const next = THEMES[(THEMES.indexOf(getTheme())+1) % THEMES.length];
+  localStorage.setItem("kelimece_theme", next);
+  applyTheme();
+}
+
 /* ============ İSTATİSTİKLER ============ */
 function showStats(){
   const p = P();
@@ -1872,6 +1920,7 @@ function startVerify(){
 }
 
 /* ============ BAŞLANGIÇ ============ */
+applyTheme();
 loadState();
 if(S && S.activeLang && S.langs[S.activeLang]){
   showHome();
