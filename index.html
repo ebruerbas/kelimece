@@ -341,7 +341,7 @@
       <div class="stat"><div class="num" id="st-learned">0</div><div class="lbl">Öğrenilen</div></div>
       <div class="stat"><div class="num" id="st-known">0</div><div class="lbl">Bilinen</div></div>
     </div>
-    <div class="card" style="margin-bottom:18px">
+    <div class="card" style="margin-bottom:18px;cursor:pointer" onclick="openCurrentLevel()" role="button" tabindex="0" aria-label="Mevcut seviyeyi görüntüle ve kalan kelimeleri çalış" onkeydown="if(event.key==='Enter')openCurrentLevel()">
       <div style="display:flex;justify-content:space-between;align-items:baseline">
         <strong style="font-size: 0.875rem" id="home-level-label"></strong>
         <span style="font-size: 0.8125rem;color:var(--muted)" id="home-level-count"></span>
@@ -1990,6 +1990,7 @@ function showPV(){
 }
 function showPVDetail(lv){
   pvMode = true;
+  ldFromHome = false;
   curLevel = lv;
   const p = P();
   const ws = pvLevelWords(lv);
@@ -2004,7 +2005,9 @@ function showPVDetail(lv){
   }).join("");
   show("scr-leveldetail");
 }
-function ldBack(){ pvMode ? showPV() : showLevels(); }
+let ldFromHome = false;
+function ldBack(){ ldFromHome ? showHome() : (pvMode ? showPV() : showLevels()); }
+function openCurrentLevel(){ showLevelDetail(P().level); ldFromHome = true; $("ld-back").textContent = "‹ Ana sayfa"; }
 
 /* ============ SEVİYELER ============ */
 let curLevel = null;
@@ -2025,6 +2028,7 @@ function showLevels(){
 }
 function showLevelDetail(lv){
   pvMode = false;
+  ldFromHome = false;
   $("ld-back").textContent = "‹ Seviyeler";
   curLevel = lv;
   const p = P();
