@@ -363,6 +363,11 @@
       <div><div class="tt">Seviye Seviye</div><div class="dd">Tüm seviyeleri keşfet, dilediğinden çalış</div></div>
       <div class="arrow">›</div>
     </div>
+    <div class="menu-card" id="pv-card" style="display:none">
+      <div class="ico" aria-hidden="true">🧩</div>
+      <div><div class="tt">Phrasal Verbs</div><div class="dd" id="pv-desc"></div></div>
+      <div class="arrow" id="pv-arrow">›</div>
+    </div>
     <div class="menu-card" onclick="showLearned()">
       <div class="ico" aria-hidden="true">📚</div>
       <div><div class="tt">Kelimelerim</div><div class="dd">Öğrendiğin ve bildiğin kelimeler</div></div>
@@ -452,9 +457,17 @@
     <div class="level-grid" style="margin-top:16px" id="level-grid"></div>
   </div>
 
+  <!-- PHRASAL VERBS -->
+  <div id="scr-pv" class="screen">
+    <button class="back" onclick="showHome()">‹ Ana sayfa</button>
+    <h2>Phrasal Verbs 🧩</h2>
+    <p class="sub">İngilizce'nin ustalık parkuru: 120 deyimsel fiil, 6 blok. Boşluk doldurma burada bol — bağlamıyla öğren.</p>
+    <div class="level-grid" style="margin-top:16px;grid-template-columns:repeat(3,1fr)" id="pv-grid"></div>
+  </div>
+
   <!-- LEVEL DETAIL -->
   <div id="scr-leveldetail" class="screen">
-    <button class="back" onclick="showLevels()">‹ Seviyeler</button>
+    <button class="back" id="ld-back" onclick="ldBack()">‹ Seviyeler</button>
     <div style="display:flex;justify-content:space-between;align-items:center">
       <h2 id="ld-title"></h2>
       <button class="btn small" onclick="startLevelQuiz()">Quiz Yap</button>
@@ -1197,7 +1210,143 @@ const SENTENCES = {
   "tereddüt": { en: ["She accepted the offer without ___.", "Teklifi tereddüt etmeden kabul etti."] },
   "fedakarlık": { en: ["Parenthood requires endless ___.", "Ebeveynlik sonsuz fedakarlık gerektirir."] }
 };
-function hasSentence(wi){ const s = SENTENCES[wTr(wi)]; return !!(s && s[S.activeLang]); }
+
+/* ============ PHRASAL VERBS MODÜLÜ ============
+   İngilizce'ye özel ustalık parkuru — Seviye 8'e ulaşınca açılır (hedef kitle: geliştirmek
+   isteyenler). Satır: [tr anlam, phrasal verb, boşluklu örnek cümle, cümlenin TR çevirisi].
+   İndeksleme: PV_BASE + sıra. Bu sayede quiz motoru, akıllı tekrar ve favoriler
+   hiçbir değişiklik olmadan bu kelimeleri de taşıyabilir (wFor/wTr/levelOf offset tanır).
+   İlerleme p.pv.learned'da ayrı tutulur; WORDS indeksleriyle asla karışmaz. */
+const PV_BASE = 100000;
+const PV_UNLOCK_LEVEL = 8;
+const PV_NAMES = ["Güne Başlarken","Ev ve Günlük İşler","İletişim ve İlişkiler","İş ve Okul","Duygu ve Tepkiler","Usta Dokunuşlar"];
+const PHRASALS = [
+["uyanmak","wake up","I ___ at seven every morning.","Her sabah yedide uyanırım."],
+["yataktan kalkmak","get up","It's hard to ___ on cold mornings.","Soğuk sabahlarda kalkmak zor."],
+["giymek","put on","___ your coat, it's freezing outside.","Montunu giy, dışarısı buz gibi."],
+["çıkarmak (giysi)","take off","Please ___ your shoes at the door.","Lütfen ayakkabılarını kapıda çıkar."],
+["açmak (cihaz)","turn on","Can you ___ the lights?","Işıkları açar mısın?"],
+["kapatmak (cihaz)","turn off","Don't forget to ___ the oven.","Fırını kapatmayı unutma."],
+["dışarı çıkmak","go out","Let's ___ for dinner tonight.","Bu akşam yemeğe çıkalım."],
+["geri dönmek","come back","She will ___ from holiday on Monday.","Tatilden pazartesi dönecek."],
+["içeri girmek","come in","___ and make yourself at home.","İçeri gel, rahatına bak."],
+["oturmak","sit down","Please ___ and wait for your turn.","Lütfen oturun ve sıranızı bekleyin."],
+["ayağa kalkmak","stand up","Everyone had to ___ when the judge entered.","Hâkim girince herkes ayağa kalkmak zorundaydı."],
+["yerden almak / almak","pick up","Can you ___ the kids from school?","Çocukları okuldan alabilir misin?"],
+["yere bırakmak","put down","___ that heavy box before you hurt yourself.","Kendine zarar vermeden o ağır kutuyu bırak."],
+["binmek (otobüs/tren)","get on","We need to ___ the next bus.","Bir sonraki otobüse binmemiz gerek."],
+["inmek (otobüs/tren)","get off","___ at the third stop.","Üçüncü durakta in."],
+["binmek (araba)","get in","___ the car, we're late!","Arabaya bin, geç kaldık!"],
+["inmek / dışarı çıkmak","get out","___ of the house and enjoy the sun.","Evden çık ve güneşin tadını çıkar."],
+["bakmak","look at","___ this old photo of us.","Şu eski fotoğrafımıza bak."],
+["aramak (bir şeyi)","look for","Can you help me ___ my keys?","Anahtarlarımı aramama yardım eder misin?"],
+["devam etmek","go on","___ with your story, I'm listening.","Hikâyene devam et, dinliyorum."],
+["toplamak / temizlemek","clean up","Let's ___ the kitchen together.","Mutfağı birlikte toplayalım."],
+["çöpe atmak","throw away","Don't ___ those boxes, we may need them.","O kutuları atma, lazım olabilir."],
+["yerine kaldırmak","put away","___ your toys before dinner.","Yemekten önce oyuncaklarını kaldır."],
+["kurmak","set up","It took an hour to ___ the tent.","Çadırı kurmak bir saat sürdü."],
+["dışarı çıkarmak","take out","Can you ___ the rubbish tonight?","Bu akşam çöpü çıkarabilir misin?"],
+["geri getirmek","bring back","___ the ladder when you're done.","İşin bitince merdiveni geri getir."],
+["geri vermek","give back","Please ___ the books you borrowed.","Lütfen ödünç aldığın kitapları geri ver."],
+["borcu geri ödemek","pay back","I'll ___ the money next week, promise.","Parayı gelecek hafta geri öderim, söz."],
+["doldurmak (form)","fill in","___ this form and sign at the bottom.","Bu formu doldur ve altını imzala."],
+["ağzına kadar doldurmak","fill up","We should ___ the tank before the trip.","Yolculuktan önce depoyu doldurmalıyız."],
+["bitmek / tükenmek","run out","We've ___ of milk again.","Yine sütümüz bitti."],
+["tüketip bitirmek","use up","Don't ___ all the hot water!","Sıcak suyun hepsini bitirme!"],
+["bakmak / ilgilenmek","look after","Can you ___ my cat this weekend?","Bu hafta sonu kedime bakabilir misin?"],
+["ilgilenmek / başa çıkmak","deal with","I'll ___ this problem tomorrow.","Bu sorunla yarın ilgileneceğim."],
+["sürdürmek","carry on","___ working, don't mind me.","Çalışmaya devam et, bana aldırma."],
+["vazgeçmek / bırakmak","give up","Never ___ on your dreams.","Hayallerinden asla vazgeçme."],
+["ertelemek","put off","Don't ___ your homework again.","Ödevini yine erteleme."],
+["denemek (giysi)","try on","Can I ___ these jeans?","Bu kotu deneyebilir miyim?"],
+["fişe takmak","plug in","___ the charger, the battery is low.","Şarj aletini tak, pil azalmış."],
+["ısınmak (spor)","warm up","Always ___ before you exercise.","Egzersizden önce her zaman ısın."],
+["geri aramak","call back","She's busy now, can you ___ later?","Şu an meşgul, sonra tekrar arar mısın?"],
+["telefonu kapatmak","hang up","Don't ___ — I haven't finished!","Kapatma — daha bitirmedim!"],
+["yüksek sesle konuşmak","speak up","___ please, we can't hear you.","Lütfen yüksek sesle konuş, seni duyamıyoruz."],
+["not etmek","write down","___ the address before you forget it.","Unutmadan adresi not et."],
+["işaret etmek / belirtmek","point out","Can you ___ the mistakes in my essay?","Kompozisyonumdaki hataları gösterebilir misin?"],
+["konuyu açmak","bring up","Why did you ___ that subject at dinner?","O konuyu yemekte neden açtın?"],
+["öğrenmek / ortaya çıkarmak","find out","I want to ___ what really happened.","Gerçekte ne olduğunu öğrenmek istiyorum."],
+["çıkma teklif etmek","ask out","He wants to ___ her on a date.","Ona çıkma teklif etmek istiyor."],
+["takılmak / vakit geçirmek","hang out","We usually ___ at the café on Saturdays.","Cumartesileri genelde kafede takılırız."],
+["iyi geçinmek","get along","I ___ well with my colleagues.","İş arkadaşlarımla iyi geçinirim."],
+["ayrılmak (ilişki)","break up","They decided to ___ after five years.","Beş yılın ardından ayrılmaya karar verdiler."],
+["barışmak","make up","They argue a lot but always ___ quickly.","Çok tartışırlar ama hep çabucak barışırlar."],
+["hayal kırıklığına uğratmak","let down","I promise I won't ___ you.","Söz veriyorum, seni hayal kırıklığına uğratmayacağım."],
+["neşelendirmek","cheer up","I bought flowers to ___ my mum.","Annemi neşelendirmek için çiçek aldım."],
+["sakinleşmek","calm down","Take a deep breath and ___.","Derin bir nefes al ve sakinleş."],
+["çıkagelmek / boy göstermek","show up","He didn't ___ at the meeting.","Toplantıya gelmedi."],
+["yetişmek / araya kapatmak","catch up","Let's meet and ___ over coffee.","Buluşup kahve eşliğinde hasret giderelim."],
+["arası bozulmak","fall out","The brothers ___ over the inheritance.","Kardeşlerin arası miras yüzünden bozuldu."],
+["sözlükten bakmak","look up","___ the word if you don't know it.","Bilmiyorsan kelimeye sözlükten bak."],
+["rastlamak","run into","You might ___ old friends at the market.","Pazarda eski arkadaşlara rastlayabilirsin."],
+["teslim etmek","hand in","___ your essays by Friday.","Kompozisyonlarınızı cumaya kadar teslim edin."],
+["dağıtmak","hand out","Could you ___ these papers to the class?","Bu kağıtları sınıfa dağıtır mısın?"],
+["çözmek / spor yapmak","work out","Things will ___ in the end.","Sonunda her şey yoluna girecek."],
+["çözmek / anlamak","figure out","I can't ___ how this machine works.","Bu makinenin nasıl çalıştığını çözemiyorum."],
+["gerçekleştirmek / yürütmek","carry out","The team will ___ the plan next month.","Ekip planı gelecek ay uygulayacak."],
+["devralmak","take over","She will ___ the company from her father.","Şirketi babasından devralacak."],
+["yola çıkmak","set off","We ___ early to avoid the traffic.","Trafiğe yakalanmamak için erken yola çıktık."],
+["yedeklemek / desteklemek","back up","___ your files before the update.","Güncellemeden önce dosyalarını yedekle."],
+["iptal etmek","call off","They may ___ the match because of rain.","Maçı yağmur yüzünden iptal edebilirler."],
+["halletmek / düzene sokmak","sort out","I need to ___ my papers this weekend.","Bu hafta sonu evraklarımı halletmem gerek."],
+["takibini yapmak","follow up","I'll ___ on your request tomorrow.","Talebinin takibini yarın yapacağım."],
+["okulu bırakmak","drop out","He decided to ___ of university.","Üniversiteyi bırakmaya karar verdi."],
+["kaydolmak","sign up","___ for the course before it fills up.","Dolmasından önce kursa kaydol."],
+["incelemek / araştırmak","look into","The police promised to ___ the complaint.","Polis şikâyeti araştırmaya söz verdi."],
+["gözden geçirmek","go over","Let's ___ the plan one more time.","Planı bir kez daha gözden geçirelim."],
+["iyice düşünmek","think over","___ the offer before you decide.","Karar vermeden önce teklifi iyice düşün."],
+["üstlenmek (iş)","take on","Don't ___ too much work this month.","Bu ay çok fazla iş üstlenme."],
+["telefonu bağlamak","put through","Hold on, I'll ___ you to the manager.","Bekleyin, sizi müdüre bağlıyorum."],
+["eksiksiz doldurmak (belge)","fill out","___ the application in capital letters.","Başvuruyu büyük harflerle doldurun."],
+["hayatına devam etmek","move on","It's time to ___ and start fresh.","Artık devam edip yeni bir sayfa açma zamanı."],
+["çıldırmak / panik yapmak","freak out","Don't ___ — it's just a spider.","Panik yapma — sadece bir örümcek."],
+["atlatmak / unutmak","get over","It took him months to ___ the breakup.","Ayrılığı atlatması aylar sürdü."],
+["boyun eğmek / pes etmek","give in","She refuses to ___ to pressure.","Baskıya boyun eğmeyi reddediyor."],
+["beklemek (hatta)","hold on","___ a second, I'm almost ready.","Bir saniye bekle, neredeyse hazırım."],
+["hor görmek","look down on","Don't ___ people who earn less.","Daha az kazanan insanları hor görme."],
+["saygı duymak / örnek almak","look up to","Kids ___ their teachers.","Çocuklar öğretmenlerini örnek alır."],
+["katlanmak / tahammül etmek","put up with","I can't ___ this noise anymore.","Bu gürültüye daha fazla katlanamıyorum."],
+["savunmak / arkasında durmak","stand up for","Always ___ your friends.","Arkadaşlarının her zaman arkasında dur."],
+["çekmek (birine benzemek)","take after","People say I ___ my grandmother.","Büyükanneme çektiğimi söylerler."],
+["azarlamak","tell off","The teacher is going to ___ him for being late.","Öğretmen geç kaldığı için onu azarlayacak."],
+["geri çevirmek / reddetmek","turn down","She had to ___ the invitation.","Daveti geri çevirmek zorunda kaldı."],
+["geri adım atmak","back down","Neither side wanted to ___.","İki taraf da geri adım atmak istemedi."],
+["itiraf etmek (hata)","own up","___ to your mistake and apologize.","Hatanı kabul et ve özür dile."],
+["etkisi geçmek","wear off","The painkiller will ___ in a few hours.","Ağrı kesicinin etkisi birkaç saate geçer."],
+["patlamak (öfke)","blow up","Try not to ___ over small things.","Küçük şeylere parlamamaya çalış."],
+["bozulmak / çökmek","break down","Old cars often ___ in traffic.","Eski arabalar trafikte sık sık bozulur."],
+["bayılmak","pass out","People sometimes ___ in extreme heat.","İnsanlar aşırı sıcakta bazen bayılabilir."],
+["içini açmak","open up","It takes time for him to ___ about his feelings.","Duyguları hakkında açılması zaman alıyor."],
+["içine atmak","bottle up","Don't ___ your feelings — talk to someone.","Duygularını içine atma — biriyle konuş."],
+["öfkeyle saldırmak","lash out","Don't ___ at people when you're angry.","Öfkeliyken insanlara verip veriştirme."],
+["yol açmak / sebep olmak","bring about","Technology can ___ huge changes in society.","Teknoloji toplumda büyük değişimlere yol açabilir."],
+["rastlamak / denk gelmek","come across","You might ___ some old photos in that box.","O kutuda eski fotoğraflara denk gelebilirsin."],
+["bulmak / akıl etmek","come up with","We need to ___ a better plan.","Daha iyi bir plan bulmamız gerek."],
+["ortadan kaldırmak","do away with","The school wants to ___ weekend homework.","Okul hafta sonu ödevlerini kaldırmak istiyor."],
+["suya düşmek (plan)","fall through","Plans sometimes ___ at the last minute.","Planlar bazen son dakikada suya düşer."],
+["idare etmek / geçinmek","get by","They ___ on one salary.","Tek maaşla geçiniyorlar."],
+["atlatarak tamamlamak","get through","We'll ___ this difficult week together.","Bu zor haftayı birlikte atlatacağız."],
+["yaşayıp geçirmek","go through","It's hard to ___ a divorce alone.","Bir boşanmayı tek başına atlatmak zordur."],
+["pürüzleri gidermek","iron out","We still need to ___ a few details.","Hâlâ birkaç ayrıntıyı gidermemiz gerek."],
+["beklentiyi karşılamak","live up to","The film didn't ___ the hype.","Film beklentileri karşılamadı."],
+["seçebilmek / anlamlandırmak","make out","I can't ___ what the sign says.","Tabelada ne yazdığını seçemiyorum."],
+["başarmak (zor işi)","pull off","Nobody thought she could ___ it, but she did.","Kimse başarabileceğini düşünmüyordu ama başardı."],
+["kenara ayırmak","put aside","___ some money every month.","Her ay bir miktar para kenara ayır."],
+["olasılık dışı bırakmak","rule out","We can't ___ the possibility of rain.","Yağmur olasılığını göz ardı edemeyiz."],
+["kandırılmak / kavramak","take in","It was hard to ___ the terrible news.","Korkunç haberi kavramak zordu."],
+["sonuçlanmak / çıkmak","turn out","I hope everything will ___ fine.","Umarım her şey yolunda çıkar."],
+["sonunda ... olmak","wind up","If you keep spending, you'll ___ broke.","Böyle harcarsan sonunda beş parasız kalırsın."],
+["dört gözle beklemek","look forward to","I ___ seeing you next month.","Gelecek ay seni görmeyi dört gözle bekliyorum."],
+["nihayet vakit bulmak","get around to","I never ___ reading that book.","O kitabı okumaya bir türlü vakit bulamadım."],
+["bilgisini tazelemek","brush up on","I need to ___ my English before the trip.","Yolculuktan önce İngilizcemi tazelemem gerek."]
+];
+const PV_LEVEL_COUNT = PHRASALS.length / LEVEL_SIZE;
+function pvOf(p){ if(!p.pv) p.pv = { learned: [] }; return p.pv; }
+function pvLevelWords(lv){ const s=(lv-1)*LEVEL_SIZE; return Array.from({length:LEVEL_SIZE},(_,k)=>PV_BASE+s+k); }
+function pvUnlocked(p){ return S.activeLang==="en" && p.level >= PV_UNLOCK_LEVEL; }
+function hasSentence(wi){ return !!sentenceFor(wi, S.activeLang); }
 /* ============ YARDIMCILAR ============ */
 const LANG_KEYS = ["en","de","es","fr","it"];
 const COL = { tr:0, en:1, de:2, es:3, fr:4, it:5 };
@@ -1216,18 +1365,31 @@ function yesterday(){ return daysAgo(1); }
 function daysAgo(n){ const d=new Date(); d.setDate(d.getDate()-n); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 function norm(s){ return s.toLowerCase().trim().replace(/^to\s+/,"").replace(/^sich\s+/,"").replace(/œ/g,"oe").replace(/ß/g,"ss").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\s+/g," "); }
 function esc(s){ const d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
-function levelOf(i){ return Math.floor(i/LEVEL_SIZE)+1; }
+/* Erişimciler PV_BASE üstü indeksleri PHRASALS'a yönlendirir — quiz motoru,
+   akıllı tekrar ve favoriler bu sayede iki havuzu da ayrımsız taşır. */
+function levelOf(i){ return i>=PV_BASE ? Math.floor((i-PV_BASE)/LEVEL_SIZE)+1 : Math.floor(i/LEVEL_SIZE)+1; }
 function levelWords(lv){ const s=(lv-1)*LEVEL_SIZE; return Array.from({length:LEVEL_SIZE},(_,k)=>s+k); }
-function wTr(i){ return WORDS[i][COL.tr]; }
-function wFor(i,lang){ return WORDS[i][COL[lang]]; }
+function wTr(i){ return i>=PV_BASE ? PHRASALS[i-PV_BASE][0] : WORDS[i][COL.tr]; }
+function wFor(i,lang){ return i>=PV_BASE ? PHRASALS[i-PV_BASE][1] : WORDS[i][COL[lang]]; }
+function sentenceFor(wi, lang){
+  if(wi>=PV_BASE){ const r = PHRASALS[wi-PV_BASE]; return (lang==="en" && r[2]) ? [r[2], r[3]] : null; }
+  const s = SENTENCES[wTr(wi)];
+  return (s && s[lang]) ? s[lang] : null;
+}
 /* Çeldiricileri (yanlış şıkları) TÜM kelime havuzundan değil, hedef kelimeyle AYNI SEVİYEDEN
    seçer. Seviyeler zaten tema/zorluk bazlı gruplu olduğu için (ör. Seviye 4 = duygular,
    Seviye 7 = soyut isimler), aynı seviyeden çeldiriciler anlam ve biçim olarak birbirine
    yakın çıkar — sezgiyle/kökle eleyip doğru cevabı bulmak zorlaşır. cmp(k), çeldiricinin
    doğru cevapla aynı anlama gelmemesini garanti eden karşılaştırma fonksiyonu. */
 function pickDistractors(wi, n, cmp){
-  let pool = levelWords(levelOf(wi)).filter(k=>k!==wi && cmp(k)!==cmp(wi));
-  if(pool.length < n) pool = WORDS.map((_,k)=>k).filter(k=>k!==wi && cmp(k)!==cmp(wi));
+  let pool;
+  if(wi>=PV_BASE){
+    pool = pvLevelWords(levelOf(wi)).filter(k=>k!==wi && cmp(k)!==cmp(wi));
+    if(pool.length < n) pool = PHRASALS.map((_,k)=>PV_BASE+k).filter(k=>k!==wi && cmp(k)!==cmp(wi));
+  } else {
+    pool = levelWords(levelOf(wi)).filter(k=>k!==wi && cmp(k)!==cmp(wi));
+    if(pool.length < n) pool = WORDS.map((_,k)=>k).filter(k=>k!==wi && cmp(k)!==cmp(wi));
+  }
   return sample(pool, n);
 }
 
@@ -1237,7 +1399,7 @@ function loadState(){ try { S = JSON.parse(localStorage.getItem("kelimece_v4"));
 function saveState(){ localStorage.setItem("kelimece_v4", JSON.stringify(S)); }
 function P(){ return S.langs[S.activeLang]; }
 function newProfile(level){ return { level, known:[], learned:[], streak:0, lastStreakDay:null, daily:null, lastVerify:0, tough:{}, log:{} }; }
-function isDone(p,i){ return p.learned.includes(i)||p.known.includes(i); }
+function isDone(p,i){ return i>=PV_BASE ? pvOf(p).learned.includes(i) : (p.learned.includes(i)||p.known.includes(i)); }
 /* Akıllı tekrar: yanlış yapılan kelimeler wi -> hata ağırlığı (1-5). Eski profillerde alan
    olmayabilir, o yüzden her erişim bu yardımcıdan geçer (storage v4 korunur, alan eklemek güvenli). */
 function toughOf(p){ if(!p.tough) p.tough = {}; return p.tough; }
@@ -1473,7 +1635,7 @@ function birdFace(mood, size){
    Rozet/puan yerine kuşun kendisi zenginleşir — kalıcı, yarışsız ilerleme. */
 const FEATHER_BASE = 3, FEATHER_PER = 20, FEATHER_MAX = 12;
 const FEATHER_COLORS = ["#ff8fa3","#ffd166","#5ec9c0"];
-function featherCount(p){ return Math.min(FEATHER_MAX, FEATHER_BASE + Math.floor(p.learned.length / FEATHER_PER)); }
+function featherCount(p){ return Math.min(FEATHER_MAX, FEATHER_BASE + Math.floor((p.learned.length + pvOf(p).learned.length) / FEATHER_PER)); }
 function renderMeceTail(p){
   const n = featherCount(p);
   /* Yelpaze: tüyler -78° (yukarı) ile +12° (aşağı) arasında eşit dağılır; 3 tüyde orijinal duruş korunur */
@@ -1488,10 +1650,11 @@ function renderMeceTail(p){
 }
 function showFeathers(){
   const p = P(), n = featherCount(p);
-  const kalan = FEATHER_PER - (p.learned.length % FEATHER_PER);
+  const tot = p.learned.length + pvOf(p).learned.length;
+  const kalan = FEATHER_PER - (tot % FEATHER_PER);
   const sub = n>=FEATHER_MAX
-    ? `${p.learned.length} kelime öğrendin ve kuyruğum tamamen doldu. Sen bir efsanesin!`
-    : `Şu an ${n} tüyüm var (${p.learned.length} kelime). ${kalan} kelime daha öğrenirsen yeni bir tüy takıyorum!`;
+    ? `${tot} kelime öğrendin ve kuyruğum tamamen doldu. Sen bir efsanesin!`
+    : `Şu an ${n} tüyüm var (${tot} kelime). ${kalan} kelime daha öğrenirsen yeni bir tüy takıyorum!`;
   showMotiv2("🪶","Mece'nin tüyleri", sub, null);
 }
 /* Ana sayfa konuşma balonu: duruma göre (kutlama > özlem > seri > günün lafı) */
@@ -1532,6 +1695,22 @@ function showHome(){
   $("review-desc").textContent = tc ? `Zorlandığın ${tc} kelime seni bekliyor 💪` : "Öğrendiklerin kalıcı mı? Kendini sına";
   $("mece-bubble").textContent = meceLine(p);
   renderMeceTail(p);
+  /* Phrasal Verbs kartı: sadece İngilizce'de görünür, Seviye 8'de açılır */
+  const pvCard = $("pv-card");
+  if(S.activeLang === "en"){
+    pvCard.style.display = "flex";
+    if(pvUnlocked(p)){
+      pvCard.style.opacity = "";
+      $("pv-desc").textContent = `${pvOf(p).learned.length}/${PHRASALS.length} deyimsel fiil — ustalık parkuru`;
+      $("pv-arrow").textContent = "›";
+      pvCard.onclick = showPV;
+    } else {
+      pvCard.style.opacity = ".6";
+      $("pv-desc").textContent = `Seviye ${PV_UNLOCK_LEVEL}'e ulaşınca açılır (şu an ${p.level})`;
+      $("pv-arrow").textContent = "🔒";
+      pvCard.onclick = ()=>showMotiv2("🧩","Henüz kilitli","Phrasal Verbs parkuru, temelini sağlamlaştıranlar için. Seviye "+PV_UNLOCK_LEVEL+"'e ulaştığında Mece kilidi açacak — az kaldı!", null);
+    }
+  } else pvCard.style.display = "none";
   /* Haftalık sürpriz doğrulama quizi */
   const verifyDue = p.known.length>=5 && (!p.lastVerify || Date.now()-p.lastVerify > 7*86400000);
   $("verify-card").style.display = verifyDue ? "flex" : "none";
@@ -1660,7 +1839,7 @@ function renderQuizQ(){
     $("quiz-opts").innerHTML = options.map(k=>
       `<button class="q-opt" onclick="quizAnswerMC(${k===q.wi},this)">${esc(wFor(k,lang))}</button>`).join("");
   } else if(q.type==="fill"){
-    const [sentence, trSentence] = SENTENCES[wTr(q.wi)][lang];
+    const [sentence, trSentence] = sentenceFor(q.wi, lang);
     $("quiz-prompt").textContent = `Boşluğu ${LANGS[lang].name} olarak doldur — Türkçesi: "${trSentence}"`;
     $("quiz-word").innerHTML = esc(sentence).replace("___", '<span style="color:var(--accent)">___</span>');
     $("quiz-word").style.fontSize = "1.1875rem";
@@ -1724,7 +1903,10 @@ function finishQuiz(){
   lg.q += total; lg.ok += ok;
   if(quiz.opts.markLearned){
     const before = featherCount(p);
-    quiz.correct.forEach(wi=>{ if(!p.learned.includes(wi)){ p.learned.push(wi); lg.l++; } });
+    quiz.correct.forEach(wi=>{
+      if(wi>=PV_BASE){ const l = pvOf(p).learned; if(!l.includes(wi)){ l.push(wi); lg.l++; } }
+      else if(!p.learned.includes(wi)){ p.learned.push(wi); lg.l++; }
+    });
     if(featherCount(p) > before) extra += " 🪶 Yeni tüy! Mece'nin kuyruğu zenginleşti — ana sayfada bir bak.";
   }
   if(quiz.opts.review){
@@ -1790,6 +1972,40 @@ function checkLevelUp(p, allowMulti){
   return leveled;
 }
 
+/* ============ PHRASAL VERBS EKRANLARI ============ */
+let pvMode = false;
+function showPV(){
+  const p = P();
+  $("pv-grid").innerHTML = Array.from({length:PV_LEVEL_COUNT},(_,k)=>{
+    const lv = k+1;
+    const done = pvLevelWords(lv).filter(i=>isDone(p,i)).length;
+    return `<div class="level-tile ${done===LEVEL_SIZE?"current":""}" onclick="showPVDetail(${lv})">
+      <div class="lv">${lv}</div>
+      <div class="lnm">${PV_NAMES[k]}</div>
+      <div class="cnt">${done}/${LEVEL_SIZE}</div>
+      <div class="progress-wrap" style="height:5px"><div class="progress-bar" style="width:${done/LEVEL_SIZE*100}%"></div></div>
+    </div>`;
+  }).join("");
+  show("scr-pv");
+}
+function showPVDetail(lv){
+  pvMode = true;
+  curLevel = lv;
+  const p = P();
+  const ws = pvLevelWords(lv);
+  const done = ws.filter(i=>isDone(p,i)).length;
+  $("ld-back").textContent = "‹ Phrasal Verbs";
+  $("ld-title").textContent = `Blok ${lv} · ${PV_NAMES[lv-1]}`;
+  $("ld-sub").textContent = `${done}/${LEVEL_SIZE} fiil tamamlandı. Anlamlar quiz yaptıkça açılır — hazır cevap yok!`;
+  $("ld-list").innerHTML = ws.map(i=>{
+    const tag = pvOf(p).learned.includes(i) ? `<span class="tag learned">öğrenildi</span>` : "";
+    const meaning = isDone(p,i) ? esc(wTr(i)) : `<span style="letter-spacing:2px;color:var(--muted)" role="img" aria-label="Anlamı gizli — quiz yaparak aç" title="Quiz yaparak aç">•••</span>`;
+    return `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))}<button class="speak-btn mini" aria-label="Telaffuzu dinle" onclick="speakIdx(${i})">🔊</button>${isDone(p,i)?favBtn(i):""}${tag}</span><span class="m">${meaning}</span></div>`;
+  }).join("");
+  show("scr-leveldetail");
+}
+function ldBack(){ pvMode ? showPV() : showLevels(); }
+
 /* ============ SEVİYELER ============ */
 let curLevel = null;
 function showLevels(){
@@ -1808,6 +2024,8 @@ function showLevels(){
   show("scr-levels");
 }
 function showLevelDetail(lv){
+  pvMode = false;
+  $("ld-back").textContent = "‹ Seviyeler";
   curLevel = lv;
   const p = P();
   const ws = levelWords(lv);
@@ -1826,7 +2044,7 @@ function showLevelDetail(lv){
 }
 function startLevelQuiz(){
   const p = P();
-  const ws = levelWords(curLevel);
+  const ws = pvMode ? pvLevelWords(curLevel) : levelWords(curLevel);
   const notDone = ws.filter(i=>!isDone(p,i));
   const pick = notDone.length>=DAILY_COUNT ? sample(notDone,DAILY_COUNT)
              : [...notDone, ...sample(ws.filter(i=>!notDone.includes(i)), Math.min(DAILY_COUNT-notDone.length, ws.length-notDone.length))];
@@ -1878,7 +2096,7 @@ function learnedTab(mode){
     return;
   }
   $("learned-list").innerHTML = list.slice().sort((a,b)=>a-b).map(i=>
-    `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))}<button class="speak-btn mini" aria-label="Telaffuzu dinle" onclick="speakIdx(${i})">🔊</button>${favBtn(i)} <span class="tag ${p.learned.includes(i)?"learned":"known"}">S${levelOf(i)}</span></span><span class="m">${esc(wTr(i))}</span></div>`).join("");
+    `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))}<button class="speak-btn mini" aria-label="Telaffuzu dinle" onclick="speakIdx(${i})">🔊</button>${favBtn(i)} <span class="tag ${i>=PV_BASE||p.learned.includes(i)?"learned":"known"}">${i>=PV_BASE?"PV":"S"+levelOf(i)}</span></span><span class="m">${esc(wTr(i))}</span></div>`).join("");
 }
 
 /* ============ DİL DEĞİŞTİRME ============ */

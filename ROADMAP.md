@@ -41,3 +41,8 @@ Uygulamanın kimliği: oyunlaştırmaya kaçmadan "her gün 10 dakikaya değer" 
 - Rozet, lig, puan, can tarzı oyunlaştırma
 - 5 dilde cümle üretimi (gramer doğruluğu tek kişilik projede denetlenemez)
 - Ses efektleri (varsayılan kapalı ses kimse tarafından açılmaz — tartışıldı, vazgeçildi)
+
+## Modüller (yeni katman)
+
+- [x] Phrasal Verbs (İngilizce, Seviye 8 kilidi, 120 fiil × 6 blok, cümleli) — "dile özgü ustalık parkuru" kavramının ilki
+- [ ] Collocations modülü (make/do/take kalıpları) — PV tutarsa ikinci parkur
