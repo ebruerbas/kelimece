@@ -1381,6 +1381,23 @@ function sentenceFor(wi, lang){
    Seviye 7 = soyut isimler), aynı seviyeden çeldiriciler anlam ve biçim olarak birbirine
    yakın çıkar — sezgiyle/kökle eleyip doğru cevabı bulmak zorlaşır. cmp(k), çeldiricinin
    doğru cevapla aynı anlama gelmemesini garanti eden karşılaştırma fonksiyonu. */
+function editDistance(a,b){
+  const m=a.length, n=b.length;
+  if(!m) return n; if(!n) return m;
+  let prev = Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=m;i++){
+    const cur = [i];
+    for(let j=1;j<=n;j++){
+      cur[j] = a[i-1]===b[j-1] ? prev[j-1] : 1+Math.min(prev[j-1], prev[j], cur[j-1]);
+    }
+    prev = cur;
+  }
+  return prev[n];
+}
+/* Sahte Dostlar: çeldiricilerin yarısına kadarını hedef kelimeyle yazım/ses benzerliği en
+   yüksek adaylardan seç (Levenshtein mesafesi en düşük olanlar) — "kennen/wissen" tarzı
+   karışan kelimeleri bilerek karşısına çıkarır. Kalanı eskisi gibi rastgele seçilir, tuzak
+   her seferinde aynı olmasın diye şıklar karışık sırayla döner. */
 function pickDistractors(wi, n, cmp){
   let pool;
   if(wi>=PV_BASE){
@@ -1390,7 +1407,19 @@ function pickDistractors(wi, n, cmp){
     pool = levelWords(levelOf(wi)).filter(k=>k!==wi && cmp(k)!==cmp(wi));
     if(pool.length < n) pool = WORDS.map((_,k)=>k).filter(k=>k!==wi && cmp(k)!==cmp(wi));
   }
-  return sample(pool, n);
+  if(pool.length <= n) return shuffle(pool);
+  const target = norm(cmp(wi));
+  const byCloseness = pool.map(k=>{
+    const cand = norm(cmp(k));
+    const d = editDistance(target, cand) / Math.max(target.length, cand.length, 1);
+    return {k, d};
+  }).sort((a,b)=>a.d-b.d);
+  const trapCount = Math.min(Math.ceil(n/2), pool.length);
+  const trapPool = byCloseness.slice(0, Math.max(trapCount*2, n)).map(x=>x.k);
+  const traps = sample(trapPool, trapCount);
+  const restPool = pool.filter(k=>!traps.includes(k));
+  const rest = sample(restPool, n-traps.length);
+  return shuffle([...traps, ...rest]);
 }
 
 /* ============ DURUM ============ */
@@ -1988,21 +2017,42 @@ function showPV(){
   }).join("");
   show("scr-pv");
 }
+/* Flashcard çevirme: öğrenilmemiş kelimenin ••• 'ı dokununca geçici açılır/kapanır —
+   kopya kağıdı olmasın diye kalıcı değil, aktif hatırlamayı bozmadan bir "göz atma" imkanı. */
+let revealedWords = new Set();
+function meaningHTML(p, i){
+  if(isDone(p,i)) return `<span>${esc(wTr(i))}</span>`;
+  if(revealedWords.has(i)){
+    return `<span role="button" tabindex="0" style="cursor:pointer" aria-label="Anlamı gizle" title="Gizlemek için dokun" onclick="toggleReveal(${i})" onkeydown="if(event.key==='Enter')toggleReveal(${i})">${esc(wTr(i))}</span>`;
+  }
+  return `<span role="button" tabindex="0" style="letter-spacing:2px;color:var(--muted);cursor:pointer" aria-label="Anlamı geçici göster" title="Anlamı görmek için dokun" onclick="toggleReveal(${i})" onkeydown="if(event.key==='Enter')toggleReveal(${i})">•••</span>`;
+}
+function toggleReveal(i){
+  if(revealedWords.has(i)) revealedWords.delete(i); else revealedWords.add(i);
+  renderLdList(pvMode ? pvLevelWords(curLevel) : levelWords(curLevel), pvMode);
+}
+function renderLdList(ws, isPv){
+  const p = P();
+  $("ld-list").innerHTML = ws.map(i=>{
+    let tag = "";
+    if(isPv) tag = pvOf(p).learned.includes(i) ? `<span class="tag learned">öğrenildi</span>` : "";
+    else if(p.learned.includes(i)) tag = `<span class="tag learned">öğrenildi</span>`;
+    else if(p.known.includes(i)) tag = `<span class="tag known">biliyor</span>`;
+    return `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))}<button class="speak-btn mini" aria-label="Telaffuzu dinle" onclick="speakIdx(${i})">🔊</button>${isDone(p,i)?favBtn(i):""}${tag}</span><span class="m">${meaningHTML(p,i)}</span></div>`;
+  }).join("");
+}
 function showPVDetail(lv){
   pvMode = true;
   ldFromHome = false;
   curLevel = lv;
+  revealedWords.clear();
   const p = P();
   const ws = pvLevelWords(lv);
   const done = ws.filter(i=>isDone(p,i)).length;
   $("ld-back").textContent = "‹ Phrasal Verbs";
   $("ld-title").textContent = `Blok ${lv} · ${PV_NAMES[lv-1]}`;
-  $("ld-sub").textContent = `${done}/${LEVEL_SIZE} fiil tamamlandı. Anlamlar quiz yaptıkça açılır — hazır cevap yok!`;
-  $("ld-list").innerHTML = ws.map(i=>{
-    const tag = pvOf(p).learned.includes(i) ? `<span class="tag learned">öğrenildi</span>` : "";
-    const meaning = isDone(p,i) ? esc(wTr(i)) : `<span style="letter-spacing:2px;color:var(--muted)" role="img" aria-label="Anlamı gizli — quiz yaparak aç" title="Quiz yaparak aç">•••</span>`;
-    return `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))}<button class="speak-btn mini" aria-label="Telaffuzu dinle" onclick="speakIdx(${i})">🔊</button>${isDone(p,i)?favBtn(i):""}${tag}</span><span class="m">${meaning}</span></div>`;
-  }).join("");
+  $("ld-sub").textContent = `${done}/${LEVEL_SIZE} fiil tamamlandı. Anlamlar quiz yaptıkça açılır — hazır cevap yok, ama ••• 'a dokunup göz atabilirsin!`;
+  renderLdList(ws, true);
   show("scr-leveldetail");
 }
 let ldFromHome = false;
@@ -2029,21 +2079,15 @@ function showLevels(){
 function showLevelDetail(lv){
   pvMode = false;
   ldFromHome = false;
+  revealedWords.clear();
   $("ld-back").textContent = "‹ Seviyeler";
   curLevel = lv;
   const p = P();
   const ws = levelWords(lv);
   const done = ws.filter(i=>isDone(p,i)).length;
   $("ld-title").textContent = `Seviye ${lv} · ${levelName(lv)}`;
-  $("ld-sub").textContent = `${done}/${LEVEL_SIZE} kelime tamamlandı. Anlamlar quiz yaptıkça açılır — hazır cevap yok!`;
-  $("ld-list").innerHTML = ws.map(i=>{
-    let tag = "";
-    if(p.learned.includes(i)) tag = `<span class="tag learned">öğrenildi</span>`;
-    else if(p.known.includes(i)) tag = `<span class="tag known">biliyor</span>`;
-    /* Anlam sadece öğrenilmiş/bilinen kelimelerde açık — liste kopya kağıdına dönmesin */
-    const meaning = isDone(p,i) ? esc(wTr(i)) : `<span style="letter-spacing:2px;color:var(--muted)" role="img" aria-label="Anlamı gizli — quiz yaparak aç" title="Quiz yaparak aç">•••</span>`;
-    return `<div class="word-row"><span class="w">${esc(wFor(i,S.activeLang))}<button class="speak-btn mini" aria-label="Telaffuzu dinle" onclick="speakIdx(${i})">🔊</button>${isDone(p,i)?favBtn(i):""}${tag}</span><span class="m">${meaning}</span></div>`;
-  }).join("");
+  $("ld-sub").textContent = `${done}/${LEVEL_SIZE} kelime tamamlandı. Anlamlar quiz yaptıkça açılır — hazır cevap yok, ama ••• 'a dokunup göz atabilirsin!`;
+  renderLdList(ws, false);
   show("scr-leveldetail");
 }
 function startLevelQuiz(){
