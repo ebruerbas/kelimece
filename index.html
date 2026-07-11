@@ -274,6 +274,7 @@
 
   <!-- PLACEMENT TEST -->
   <div id="scr-test" class="screen">
+    <button class="back" id="test-back" onclick="abortTest()" style="display:none">‹ Ana sayfa</button>
     <div id="test-mece" style="text-align:center;margin-bottom:6px"></div>
     <div class="counter" id="test-counter"></div>
     <div class="progress-wrap" style="margin-bottom:22px"><div class="progress-bar" id="test-progress" style="width:0%"></div></div>
@@ -1466,6 +1467,7 @@ const TEST_PASS = 7;
 let test = null;
 function startPlacement(lang){
   test = { lang, level:1, qs: sample(levelWords(1), TEST_PER_LEVEL), i:0, correct:0, totalQ:0, totalOk:0 };
+  $("test-back").style.display = "none";
   show("scr-test");
   renderTestQ();
 }
@@ -1661,21 +1663,20 @@ function importBackup(input){
   r.readAsText(f);
 }
 /* Verileri Sıfırla: "yarıda bıraktım/yanlışlık oldu" ya da "telefonumdan başkası oynayacak"
-   senaryoları için — sadece AKTİF dilin profilini sıfırlar, diğer diller etkilenmez.
-   Yıkıcı olduğu için iki adımlı onay (showConfirm) ve önce yedek alma hatırlatması var. */
+   senaryoları için. Direkt Seviye 1'e atmak yerine seviye belirleme sınavına yönlendirir —
+   eski profil, sınav BİTENE kadar (finishPlacement) dokunulmadan kalır; sınavı yarıda
+   bırakıp "‹ Ana sayfa"ya basarsa mevcut ilerlemesi hiç kaybolmaz. */
 function confirmResetLang(){
   const langName = LANGS[S.activeLang].name;
   showConfirm("⚠️", `${langName} ilerlemeni sıfırlayalım mı?`,
-    `Seviye, öğrendiğin kelimeler, serin ve Mece'nin tüyleri sıfırlanır — geri alınamaz. Başka biri oynayacaksa ya da elden ele geçecekse önce "⬇ Yedekle" ile kendi ilerlemeni indirmeni öneririz.`,
-    "Evet, Sıfırla", resetActiveLang);
+    `Seviye belirleme sınavına yönlendirileceksin; sınav bitince mevcut ilerlemenin (öğrendiğin kelimeler, serin, Mece'nin tüyleri) YERİNE sınav sonucun kaydedilir — geri alınamaz. Başka biri oynayacaksa ya da elden ele geçecekse önce "⬇ Yedekle" ile kendi ilerlemeni indirmeni öneririz.`,
+    "Evet, Teste Başla", startResetPlacement);
 }
-function resetActiveLang(){
-  const lang = S.activeLang;
-  S.langs[lang] = newProfile(1);
-  saveState();
-  showHome();
-  showMotiv2("🐣","Sıfırdan başlıyoruz!","1. seviyeden yeniden başlıyoruz, Mece de seninle. Hazır olduğunda buradayım. 🧡", null);
+function startResetPlacement(){
+  startPlacement(S.activeLang);
+  $("test-back").style.display = "block";
 }
+function abortTest(){ test = null; showHome(); }
 
 /* ============ MECE (maskot kişiliği) ============ */
 /* Mece'nin mimikleri: rozet yüzü üreten tek fonksiyon. mood: happy | cheer | oops | party */
