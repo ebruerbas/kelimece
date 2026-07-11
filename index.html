@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Kelimece — Günlük Kelime Dağarcığı</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='9' cy='7' r='2.6' fill='%23ff8fa3'/%3E%3Ccircle cx='16' cy='4.5' r='2.6' fill='%23ffd166'/%3E%3Ccircle cx='23' cy='7' r='2.6' fill='%235ec9c0'/%3E%3Ccircle cx='16' cy='18.5' r='13' fill='%23f4a950'/%3E%3Ccircle cx='11' cy='16' r='2.9' fill='%232b2013'/%3E%3Ccircle cx='12' cy='15' r='1' fill='%23fff'/%3E%3Ccircle cx='21' cy='16' r='2.9' fill='%232b2013'/%3E%3Ccircle cx='22' cy='15' r='1' fill='%23fff'/%3E%3Cpath d='M16,20 L21.5,23.5 L16,27.5 L10.5,23.5 Z' fill='%23e8622c'/%3E%3Cellipse cx='7.5' cy='21' rx='2.4' ry='1.6' fill='%23ff8fa3' opacity='0.65'/%3E%3Cellipse cx='24.5' cy='21' rx='2.4' ry='1.6' fill='%23ff8fa3' opacity='0.65'/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -84,7 +84,7 @@
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
   }
-  .app { max-width: 540px; margin: 0 auto; padding: 24px 20px 80px; }
+  .app { max-width: 540px; margin: 0 auto; padding: 24px 20px calc(80px + env(safe-area-inset-bottom)); }
   .screen { display: none; animation: fadeIn .25s ease; }
   .screen.active { display: block; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
@@ -227,7 +227,8 @@
   .tag.known { background: var(--amber-soft); color: var(--amber); }
 
   .back { background: none; border: none; color: var(--muted); font-size: 0.875rem; font-weight: 600;
-    cursor: pointer; font-family: inherit; padding: 0; margin-bottom: 16px; display: inline-flex; align-items: center; gap: 5px; }
+    cursor: pointer; font-family: inherit; padding: 0; margin-bottom: 16px; display: inline-flex; align-items: center; gap: 5px;
+    min-height: 44px; }
   @media (hover: hover) {.back:hover { color: var(--text); }}
 
   .result-emoji { font-size: 3.25rem; text-align: center; }
@@ -247,8 +248,8 @@
   .speak-btn { background: var(--accent-soft); color: var(--accent); border: none; border-radius: 9px;
     padding: 5px 14px; min-height: 44px; min-width: 44px; cursor: pointer; font-size: 0.875rem; font-family: inherit; font-weight: 600; }
   @media (hover: hover) {.speak-btn:hover { filter: brightness(.95); }}
-  .speak-btn.mini { padding: 6px 10px; min-height: 38px; min-width: 38px; font-size: 0.8125rem; margin-left: 4px; }
-  .fav-btn { background: none; border: none; cursor: pointer; font-size: 1.125rem; color: var(--muted); min-height: 38px; min-width: 38px; padding: 4px; }
+  .speak-btn.mini { padding: 6px 10px; min-height: 44px; min-width: 44px; font-size: 0.8125rem; margin-left: 4px; }
+  .fav-btn { background: none; border: none; cursor: pointer; font-size: 1.125rem; color: var(--muted); min-height: 44px; min-width: 44px; padding: 4px; }
   .fav-btn.on { color: var(--amber); }
 </style>
 </head>
@@ -1362,7 +1363,41 @@ function levelName(lv){ return LEVEL_NAMES[lv-1] || ""; }
 const DAILY_COUNT = 10;
 
 const $ = id => document.getElementById(id);
-function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); $(id).classList.add("active"); window.scrollTo(0,0); }
+/* Android/PWA donanım geri tuşu yönetimi: her ekran geçişinde tarayıcı geçmişine bir kayıt
+   eklenir; geri tuşu/gest hareketi popstate ile yakalanıp bir önceki ekrana döner — aksi
+   halde WebView'de tek geçmiş girdisi olduğu için geri tuşu doğrudan uygulamadan atar. */
+let suppressHistoryPush = false;
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  $(id).classList.add("active");
+  window.scrollTo(0,0);
+  if(!suppressHistoryPush) history.pushState({screen:id}, "", "");
+}
+function currentScreenId(){ const el = document.querySelector(".screen.active"); return el && el.id; }
+window.addEventListener("popstate", (e)=>{
+  /* Açık bir modal varsa geri tuşu önce onu kapatsın, ekran değişmesin */
+  const openModal = document.querySelector(".modal-bg.open");
+  if(openModal){
+    openModal.classList.remove("open");
+    history.pushState({screen:currentScreenId()}, "", "");
+    return;
+  }
+  const id = e.state && e.state.screen;
+  if(!id) return; /* en baştaki boş geçmiş durumuna dönüldü — tarayıcı/PWA kendi haline bıraksın (çıkış) */
+  suppressHistoryPush = true;
+  show(id);
+  suppressHistoryPush = false;
+});
+/* Native sarmalama (Capacitor App plugin) ileride eklenirse donanım geri tuşu da aynı
+   mantığı kullansın diye önden hazır — plugin yoksa bu blok hiç çalışmaz, zararsızdır. */
+if(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App){
+  window.Capacitor.Plugins.App.addListener("backButton", ()=>{
+    const openModal = document.querySelector(".modal-bg.open");
+    if(openModal){ openModal.classList.remove("open"); return; }
+    if(currentScreenId()==="scr-home") window.Capacitor.Plugins.App.exitApp();
+    else history.back();
+  });
+}
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 function sample(a,n){ return shuffle(a).slice(0,n); }
 function today(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
@@ -1467,7 +1502,7 @@ const TEST_PASS = 7;
 let test = null;
 function startPlacement(lang){
   test = { lang, level:1, qs: sample(levelWords(1), TEST_PER_LEVEL), i:0, correct:0, totalQ:0, totalOk:0 };
-  $("test-back").style.display = "none";
+  $("test-back").style.display = "inline-flex";
   show("scr-test");
   renderTestQ();
 }
@@ -1507,13 +1542,14 @@ function showMotiv2(emoji, text, sub, cb){
 }
 /* Yıkıcı işlemler için (ör. verileri sıfırlama) — "Vazgeç" seçeneği de gösteren onay modalı.
    showMotiv2'den farkı: iptal butonu görünür ve devam butonu özel bir etiket taşıyabilir. */
-function showConfirm(emoji, text, sub, confirmLabel, cb){
+function showConfirm(emoji, text, sub, confirmLabel, cb, cancelLabel){
   if(String(emoji).startsWith("<")) $("motiv-emoji").innerHTML = emoji;
   else $("motiv-emoji").textContent = emoji;
   $("motiv-text").textContent = text;
   $("motiv-sub").textContent = sub;
   motivCb = cb;
   $("motiv-btn").textContent = confirmLabel;
+  $("motiv-cancel-btn").textContent = cancelLabel || "Vazgeç";
   $("motiv-cancel-btn").style.display = "inline-block";
   $("motiv-modal").classList.add("open");
 }
@@ -1674,9 +1710,16 @@ function confirmResetLang(){
 }
 function startResetPlacement(){
   startPlacement(S.activeLang);
-  $("test-back").style.display = "block";
 }
-function abortTest(){ test = null; showHome(); }
+/* Test ekranındaki "‹ Ana sayfa": mevcut bir profil varsa (sıfırlama akışı) oraya döner;
+   ilk kullanımda (henüz profil yokken meraktan girilen test) profil olmadığından showHome()
+   çökebilir — bu yüzden onboarding ekranına, kaldığı dil/isim seçimiyle geri döner. */
+function abortTest(){
+  const lang = test && test.lang;
+  test = null;
+  if(S && S.langs && S.langs[lang]) showHome();
+  else { renderOnboardLangs(); show("scr-onboard"); }
+}
 
 /* ============ MECE (maskot kişiliği) ============ */
 /* Mece'nin mimikleri: rozet yüzü üreten tek fonksiyon. mood: happy | cheer | oops | party */
@@ -1705,7 +1748,11 @@ function birdFace(mood, size){
 }
 /* Tüy koleksiyonu: Mece 3 tüyle başlar, her 20 öğrenilen kelime kuyruğa 1 tüy ekler (maks 12).
    Rozet/puan yerine kuşun kendisi zenginleşir — kalıcı, yarışsız ilerleme. */
-const FEATHER_BASE = 3, FEATHER_PER = 20, FEATHER_MAX = 12;
+/* Kuyruk eskiden sabit FEATHER_PER=20 ile 180 kelimede (içeriğin ~%40'ında) tavan yapıyordu;
+   320 kelime + 120 phrasal verb = 440 birimin tamamına yayılsın diye orantılı hesaplanıyor —
+   içerik büyürse (yeni kelime/PV eklenirse) yeniden elle ayarlamaya gerek kalmaz. */
+const FEATHER_BASE = 3, FEATHER_MAX = 12;
+const FEATHER_PER = Math.floor((WORDS.length + PHRASALS.length) / (FEATHER_MAX - FEATHER_BASE));
 const FEATHER_COLORS = ["#ff8fa3","#ffd166","#5ec9c0"];
 function featherCount(p){ return Math.min(FEATHER_MAX, FEATHER_BASE + Math.floor((p.learned.length + pvOf(p).learned.length) / FEATHER_PER)); }
 function renderMeceTail(p){
@@ -1739,12 +1786,20 @@ const MECE_HI = [
   "Kelimeler uçar, sen yakala. Uçmak benden, yakalamak senden.",
   "Kendine 10 dakika ayır, gerisini ben hallederim."
 ];
+/* S.name onboarding'de alınıyordu ama hiçbir yerde kullanılmıyordu (sürtünme adımı, karşılığı
+   yok) — Mece'nin konuşma balonuna isim eklenerek kişiselleştirme sağlanıyor. İsim yoksa
+   (eski profiller ya da boş bırakılmışsa) cümleler ismsiz haliyle aynen çalışmaya devam eder. */
 function meceLine(p){
   const t = today();
-  if(p.daily && p.daily.date===t && p.daily.quizDone) return "Bugünü tamamladın! Gurur duyma sırası bende. 🧡";
-  if(p.lastStreakDay && p.lastStreakDay!==t && p.lastStreakDay!==yesterday() && (p.learned.length||p.known.length)) return "Seni özledim! Kitabımın üstünde tek başıma bekledim. Hoş geldin. 🧡";
-  if((p.streak||0)>=3) return "🔥 " + p.streak + " gün üst üste! Tüylerim gururla kabardı.";
-  return MECE_HI[Math.floor(Date.now()/86400000) % MECE_HI.length];
+  const name = (S.name || "").trim();
+  if(p.daily && p.daily.date===t && p.daily.quizDone)
+    return name ? `Bugünü tamamladın, ${name}! Gurur duyma sırası bende. 🧡` : "Bugünü tamamladın! Gurur duyma sırası bende. 🧡";
+  if(p.lastStreakDay && p.lastStreakDay!==t && p.lastStreakDay!==yesterday() && (p.learned.length||p.known.length))
+    return name ? `Seni özledim, ${name}! Kitabımın üstünde tek başıma bekledim. Hoş geldin. 🧡` : "Seni özledim! Kitabımın üstünde tek başıma bekledim. Hoş geldin. 🧡";
+  if((p.streak||0)>=3)
+    return name ? `🔥 ${p.streak} gün üst üste, ${name}! Tüylerim gururla kabardı.` : `🔥 ${p.streak} gün üst üste! Tüylerim gururla kabardı.`;
+  const daily = MECE_HI[Math.floor(Date.now()/86400000) % MECE_HI.length];
+  return name ? `Merhaba ${name} 👋 ${daily}` : daily;
 }
 
 function showHome(){
@@ -1788,7 +1843,7 @@ function showHome(){
   $("verify-card").style.display = verifyDue ? "flex" : "none";
   if(verifyDue && !window._verifyPrompted){
     window._verifyPrompted = true;
-    setTimeout(()=>showMotiv2("🎯","Sürpriz Doğrulama Quizi!","\"Biliyorum\" dediğin kelimelerden 5 soru geliyor... Bakalım gerçekten biliyor musun?", startVerify), 600);
+    setTimeout(()=>showConfirm("🎯","Sürpriz Doğrulama Quizi!","\"Biliyorum\" dediğin kelimelerden 5 soru geliyor... Bakalım gerçekten biliyor musun?","Hadi Başlayalım", startVerify, "Şimdi Değil"), 600);
   }
   show("scr-home");
 }
@@ -1823,11 +1878,13 @@ function renderDailyCard(){
 function dailyKnow(knows){
   const p = P();
   const wi = dailySel.queue[dailySel.pos];
+  let firstTime = false;
   if(knows){
     p.known.push(wi);
     /* İlk "Biliyorum"da bir kerelik açıklama — düğmenin sonucu belirsiz kalmasın */
     if(!S.knowInfoSeen){
       S.knowInfoSeen = true;
+      firstTime = true;
       showMotiv2("💡", '"Biliyorum" ne yapar?', 'Bu kelime "bildiklerin" listesine yazıldı ve sana ayrıca öğretilmeyecek. Ama dikkat: Mece arada sürpriz doğrulama quiziyle kontrol eder. Emin değilsen "Bilmiyorum" demek daha kârlı 😉', null);
     }
   } else {
@@ -1843,10 +1900,22 @@ function dailyKnow(knows){
       renderDailyCard();
     }
   };
-  if(!knows){
-    document.querySelectorAll("#scr-daily .know-btns .btn").forEach(b=>b.style.pointerEvents="none");
-    setTimeout(()=>{ document.querySelectorAll("#scr-daily .know-btns .btn").forEach(b=>b.style.pointerEvents=""); advance(); }, 900);
-  } else advance();
+  /* "Biliyorum" da "Bilmiyorum" gibi anında/sessizce geçmesin — yanlışlıkla basılan
+     bir dokunuş fark edilsin diye kısa bir görsel onay + gecikme sonra ilerler. */
+  const btns = document.querySelectorAll("#scr-daily .know-btns .btn");
+  btns.forEach(b=>b.style.pointerEvents="none");
+  if(knows){
+    const btnKnow = document.querySelector("#scr-daily .know-btns .green-outline");
+    const prevText = btnKnow ? btnKnow.textContent : "";
+    if(btnKnow) btnKnow.textContent = "✓ İşaretlendi";
+    setTimeout(()=>{
+      btns.forEach(b=>b.style.pointerEvents="");
+      if(btnKnow) btnKnow.textContent = prevText;
+      advance();
+    }, firstTime ? 0 : 400);
+  } else {
+    setTimeout(()=>{ btns.forEach(b=>b.style.pointerEvents=""); advance(); }, 900);
+  }
 }
 function finishDailySelection(){
   const p = P();
@@ -1902,14 +1971,14 @@ function renderQuizQ(){
     const distract = pickDistractors(q.wi, 3, wTr);
     const options = shuffle([q.wi, ...distract]);
     $("quiz-opts").innerHTML = options.map(k=>
-      `<button class="q-opt" onclick="quizAnswerMC(${k===q.wi},this)">${esc(wTr(k))}</button>`).join("");
+      `<button class="q-opt" data-k="${k}" onclick="quizAnswerMC(${k===q.wi},this)">${esc(wTr(k))}</button>`).join("");
   } else if(q.type==="mcrev"){
     $("quiz-prompt").textContent = `"${wTr(q.wi)}" kelimesinin ${LANGS[lang].name} karşılığı hangisi?`;
     $("quiz-word").textContent = wTr(q.wi);
     const distract = pickDistractors(q.wi, 3, k=>wFor(k,lang));
     const options = shuffle([q.wi, ...distract]);
     $("quiz-opts").innerHTML = options.map(k=>
-      `<button class="q-opt" onclick="quizAnswerMC(${k===q.wi},this)">${esc(wFor(k,lang))}</button>`).join("");
+      `<button class="q-opt" data-k="${k}" onclick="quizAnswerMC(${k===q.wi},this)">${esc(wFor(k,lang))}</button>`).join("");
   } else if(q.type==="fill"){
     const [sentence, trSentence] = sentenceFor(q.wi, lang);
     $("quiz-prompt").textContent = `Boşluğu ${LANGS[lang].name} olarak doldur — Türkçesi: "${trSentence}"`;
@@ -1931,9 +2000,10 @@ function quizAnswerMC(ok, btn){
   if(ok){ btn.classList.add("correct"); markResult(true); showFeedback(true); }
   else {
     btn.classList.add("wrong");
+    /* Doğru şıkkı görünen metinle değil, data-k index'iyle bul — iki şıkkın metni
+       aynı çıksa bile (nadir ama olası) yalnızca gerçekten doğru olan işaretlenir. */
     document.querySelectorAll("#quiz-opts .q-opt").forEach(b=>{
-      const correctText = q.type==="mc" ? wTr(q.wi) : wFor(q.wi, S.activeLang);
-      if(b.textContent===correctText) b.classList.add("correct");
+      if(Number(b.dataset.k)===q.wi) b.classList.add("correct");
     });
     markResult(false); showFeedback(false);
   }
