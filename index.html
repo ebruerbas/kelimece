@@ -207,6 +207,7 @@
   .level-tile {
     background: var(--card); border: 1px solid var(--border); border-radius: 14px;
     padding: 14px 10px; text-align: center; cursor: pointer; transition: all .15s;
+    min-width: 0; overflow: hidden;
   }
   @media (hover: hover) {.level-tile:hover { border-color: var(--accent); }}
   .level-tile.locked { opacity: .45; cursor: default; }
@@ -886,7 +887,28 @@ const WORDS = [
 ["ihanet","betrayal","Verrat","traición","trahison","tradimento"],
 ["teselli","consolation","Trost","consuelo","consolation","consolazione"],
 ["tereddüt","hesitation","Zögern","vacilación","hésitation","esitazione"],
-["fedakarlık","sacrifice","Opfer","sacrificio","sacrifice","sacrificio"]
+["fedakarlık","sacrifice","Opfer","sacrificio","sacrifice","sacrificio"],
+/* --- Seviye 17: Gündelik Fiiller II (NGSL bazlı genişletme, ilk parti) --- */
+["söylemek","to say","sagen","decir","dire","dire"],
+["kullanmak","to use","benutzen","usar","utiliser","usare"],
+["bakmak","to look","schauen","mirar","regarder","guardare"],
+["bulmak","to find","finden","encontrar","trouver","trovare"],
+["ihtiyaç duymak","to need","brauchen","necesitar","avoir besoin de","avere bisogno di"],
+["anlatmak","to tell","erzählen","contar","raconter","raccontare"],
+["aramak","to call","anrufen","llamar","appeler","chiamare"],
+["göstermek","to show","zeigen","mostrar","montrer","mostrare"],
+["hissetmek","to feel","fühlen","sentir","sentir","sentire"],
+["denemek","to try","versuchen","intentar","essayer","provare"],
+["yardım etmek","to help","helfen","ayudar","aider","aiutare"],
+["sormak","to ask","fragen","preguntar","demander","chiedere"],
+["tanışmak","to meet","kennenlernen","conocer","rencontrer","incontrare"],
+["başlamak","to start","anfangen","empezar","commencer","iniziare"],
+["beklemek","to wait","warten","esperar","attendre","aspettare"],
+["koymak","to put","legen","poner","mettre","mettere"],
+["olmak","to become","werden","convertirse en","devenir","diventare"],
+["tutmak","to keep","behalten","mantener","garder","tenere"],
+["inanmak","to believe","glauben","creer","croire","credere"],
+["ayrılmak","to leave","verlassen","dejar","partir","partire"]
 ];
 /* ============ ÖRNEK CÜMLELER (boşluk doldurma quizi) ============
    Anahtar: kelimenin TR karşılığı. Değer: { dil: [hedef dilde boşluklu cümle, cümlenin TR çevirisi] }
@@ -1214,7 +1236,28 @@ const SENTENCES = {
   "ihanet": { en: ["He never forgave her ___.", "Onun ihanetini asla affetmedi."] },
   "teselli": { en: ["Her kind words were a great ___.", "Nazik sözleri büyük bir teselliydi."] },
   "tereddüt": { en: ["She accepted the offer without ___.", "Teklifi tereddüt etmeden kabul etti."] },
-  "fedakarlık": { en: ["Parenthood requires endless ___.", "Ebeveynlik sonsuz fedakarlık gerektirir."] }
+  "fedakarlık": { en: ["Parenthood requires endless ___.", "Ebeveynlik sonsuz fedakarlık gerektirir."] },
+  /* --- Seviye 17 cümleleri --- */
+  "söylemek": { en: ["I want to ___ something important.", "Önemli bir şey söylemek istiyorum."] },
+  "kullanmak": { en: ["You can ___ my phone if you need to.", "İhtiyacın olursa telefonumu kullanabilirsin."] },
+  "bakmak": { en: ["Please ___ at this photo.", "Lütfen şu fotoğrafa bak."] },
+  "bulmak": { en: ["I need to ___ my keys.", "Anahtarlarımı bulmam lazım."] },
+  "ihtiyaç duymak": { en: ["Sometimes we all ___ a little help.", "Bazen hepimizin biraz yardıma ihtiyacı olur."] },
+  "anlatmak": { en: ["Can you ___ me what happened?", "Bana ne olduğunu anlatabilir misin?"] },
+  "aramak": { en: ["I'll ___ you as soon as I arrive.", "Varır varmaz seni ararım."] },
+  "göstermek": { en: ["Could you ___ me the way to the station?", "Bana istasyona giden yolu gösterebilir misin?"] },
+  "hissetmek": { en: ["I always ___ nervous before exams.", "Sınavlardan önce hep gergin hissederim."] },
+  "denemek": { en: ["You should ___ this cake, it's delicious.", "Bu pastayı denemelisin, çok lezzetli."] },
+  "yardım etmek": { en: ["Can you ___ me carry this box?", "Bu kutuyu taşımama yardım edebilir misin?"] },
+  "sormak": { en: ["Feel free to ___ any questions.", "Rahatça soru sorabilirsin."] },
+  "tanışmak": { en: ["I'd like to ___ your family.", "Ailenle tanışmak isterim."] },
+  "başlamak": { en: ["Let's ___ the meeting now.", "Hadi toplantıya şimdi başlayalım."] },
+  "beklemek": { en: ["Please ___ here until I come back.", "Ben dönene kadar lütfen burada bekle."] },
+  "koymak": { en: ["Please ___ the book on the table.", "Lütfen kitabı masaya koy."] },
+  "olmak": { en: ["She wants to ___ a doctor someday.", "Bir gün doktor olmak istiyor."] },
+  "tutmak": { en: ["You can ___ the change.", "Para üstünü sende tutabilirsin."] },
+  "inanmak": { en: ["I really ___ you can do this.", "Bunu yapabileceğine gerçekten inanıyorum."] },
+  "ayrılmak": { en: ["I have to ___ before six o'clock.", "Saat altıdan önce ayrılmam lazım."] }
 };
 
 /* ============ PHRASAL VERBS MODÜLÜ ============
@@ -1358,7 +1401,7 @@ const LANG_KEYS = ["en","de","es","fr","it"];
 const COL = { tr:0, en:1, de:2, es:3, fr:4, it:5 };
 const LEVEL_COUNT = WORDS.length / LEVEL_SIZE;
 /* Her 20'lik bloğun teması — WORDS sırasıyla birebir hizalı */
-const LEVEL_NAMES = ["İlk Kelimeler","Günlük Hayat","Temel Fiiller","Duygular","İş ve Kariyer","Eylem Fiilleri","Soyut Kavramlar","Toplum ve Ekonomi","Kültür ve Fikirler","İkna ve Keşif","Düşünce Fiilleri","Nüanslar","Akademik Dil","Karakter","Derin Kavramlar","Usta İşi"];
+const LEVEL_NAMES = ["İlk Kelimeler","Günlük Hayat","Temel Fiiller","Duygular","İş ve Kariyer","Eylem Fiilleri","Soyut Kavramlar","Toplum ve Ekonomi","Kültür ve Fikirler","İkna ve Keşif","Düşünce Fiilleri","Nüanslar","Akademik Dil","Karakter","Derin Kavramlar","Usta İşi","Gündelik Fiiller II"];
 function levelName(lv){ return LEVEL_NAMES[lv-1] || ""; }
 const DAILY_COUNT = 10;
 
