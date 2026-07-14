@@ -143,7 +143,10 @@
   .topbar .brand { display: flex; align-items: center; gap: 7px; font-size: 1.1875rem; font-weight: 800; letter-spacing: -0.02em; }
   .topbar .brand span { color: var(--mece); }
   .brand-bird { flex-shrink: 0; display: block; }
-  .hero-illo { display: block; width: 100%; max-width: 330px; margin: -4px auto 10px; }
+  .hero-wrap { position: relative; max-width: 300px; margin: 4px auto 10px; }
+  .hero-illo { display: block; width: 100%; }
+  .feather-badge { position: absolute; right: -6px; bottom: 4px; display: flex; align-items: center; gap: 6px; background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 5px 11px; font-size: 0.8125rem; font-weight: 700; font-family: inherit; color: inherit; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.10); }
+  .feather-badge svg { display: block; }
   .mece-bubble { position: relative; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 10px 14px; font-size: 0.8438rem; line-height: 1.45; max-width: 320px; margin: 0 auto; text-align: center; }
   .mece-bubble::after { content: ""; position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%) rotate(45deg); width: 12px; height: 12px; background: var(--card); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
   .feedback .mim svg { vertical-align: -6px; margin-right: 6px; }
@@ -308,37 +311,10 @@
       </div>
     </div>
     <div class="mece-bubble" id="mece-bubble"></div>
-    <svg class="hero-illo" viewBox="0 0 360 252" role="img" aria-label="Mece büyük bir kitabın üzerinde" onclick="showFeathers()" style="cursor:pointer">
-      <path d="M180,202 C134,186 84,188 40,201 L40,231 C84,218 134,216 180,232 Z" fill="#6366f1"/>
-      <path d="M180,202 C226,186 276,188 320,201 L320,231 C276,218 226,216 180,232 Z" fill="#6366f1"/>
-      <path d="M180,196 C138,182 92,184 50,196 L50,220 C92,208 138,206 180,220 Z" fill="#fffdf6" stroke="#e4d9c4" stroke-width="1"/>
-      <path d="M180,196 C222,182 268,184 310,196 L310,220 C268,208 222,206 180,220 Z" fill="#fffdf6" stroke="#e4d9c4" stroke-width="1"/>
-      <path d="M74,199 C104,191 138,190 166,198" fill="none" stroke="#ddd2ba" stroke-width="1.6" stroke-linecap="round"/>
-      <path d="M74,206 C104,198 138,197 166,205" fill="none" stroke="#ddd2ba" stroke-width="1.6" stroke-linecap="round"/>
-      <path d="M194,198 C222,190 256,191 286,199" fill="none" stroke="#ddd2ba" stroke-width="1.6" stroke-linecap="round"/>
-      <path d="M194,205 C222,197 256,198 286,206" fill="none" stroke="#ddd2ba" stroke-width="1.6" stroke-linecap="round"/>
-      <line x1="180" y1="196" x2="180" y2="220" stroke="#e4d9c4" stroke-width="1.4"/>
-      <g id="mece-tail"></g>
-      <g transform="rotate(-24 168 64)"><rect x="163" y="48" width="10" height="22" rx="5" fill="#ff8fa3"/></g>
-      <rect x="175" y="42" width="10" height="24" rx="5" fill="#ffd166"/>
-      <g transform="rotate(24 192 64)"><rect x="187" y="48" width="10" height="22" rx="5" fill="#5ec9c0"/></g>
-      <path d="M166,182 L166,194" stroke="#c95f22" stroke-width="3" stroke-linecap="round"/>
-      <path d="M194,182 L194,194" stroke="#c95f22" stroke-width="3" stroke-linecap="round"/>
-      <ellipse cx="180" cy="132" rx="55" ry="51" fill="#f4a950"/>
-      <ellipse cx="180" cy="151" rx="33" ry="26" fill="#fbd9a0"/>
-      <g transform="rotate(12 219 158)"><rect x="211" y="146" width="9" height="22" rx="4.5" fill="#ff8fa3"/></g>
-      <g transform="rotate(24 228 154)"><rect x="221" y="142" width="9" height="22" rx="4.5" fill="#ffd166"/></g>
-      <g transform="rotate(36 236 148)"><rect x="230" y="136" width="9" height="22" rx="4.5" fill="#5ec9c0"/></g>
-      <ellipse cx="219" cy="130" rx="15" ry="28" fill="#d9722a" transform="rotate(-16 219 130)"/>
-      <circle cx="161" cy="115" r="7" fill="#2b2013"/><circle cx="163.5" cy="112.5" r="2.4" fill="#fff"/>
-      <circle cx="199" cy="115" r="7" fill="#2b2013"/><circle cx="201.5" cy="112.5" r="2.4" fill="#fff"/>
-      <path d="M180,123 L193,131.5 L180,141 L167,131.5 Z" fill="#e8622c"/>
-      <path d="M167,131.5 L193,131.5 L180,141 Z" fill="#d9541f"/>
-      <ellipse cx="147" cy="137" rx="8.5" ry="5.5" fill="#ff8fa3" opacity="0.55"/>
-      <ellipse cx="213" cy="137" rx="8.5" ry="5.5" fill="#ff8fa3" opacity="0.55"/>
-      <rect x="158" y="192" width="16" height="6" rx="3" fill="#e8622c"/>
-      <rect x="186" y="192" width="16" height="6" rx="3" fill="#e8622c"/>
-    </svg>
+    <div class="hero-wrap">
+      <img class="hero-illo" src="mece-hero.png" alt="Mece büyük bir kitabın üzerinde" onclick="showFeathers()" style="cursor:pointer">
+      <button class="feather-badge" id="mece-tail" type="button" onclick="showFeathers()" aria-label="Mece'nin tüy koleksiyonu"></button>
+    </div>
     <div class="stat-row">
       <div class="stat"><div class="num" id="st-level">1</div><div class="lbl">Seviye</div></div>
       <div class="stat"><div class="num" id="st-learned">0</div><div class="lbl">Öğrenilen</div></div>
@@ -2545,8 +2521,9 @@ function birdFace(mood, size){
     + "<ellipse cx='7.5' cy='21' rx='2.4' ry='1.6' fill='#ff8fa3' opacity='0.65'/><ellipse cx='24.5' cy='21' rx='2.4' ry='1.6' fill='#ff8fa3' opacity='0.65'/>"
     + extra + "</svg>";
 }
-/* Tüy koleksiyonu: Mece 3 tüyle başlar, her 20 öğrenilen kelime kuyruğa 1 tüy ekler (maks 12).
-   Rozet/puan yerine kuşun kendisi zenginleşir — kalıcı, yarışsız ilerleme. */
+/* Tüy koleksiyonu: Mece 3 tüyle başlar, düzenli aralıklarla 1 tüy eklenir (maks 12).
+   Eskiden tüyler ana ekrandaki SVG kuşun kuyruğuna çiziliyordu; maskot 3D görsele geçince
+   koleksiyon, görselin köşesindeki rozete taşındı — özellik ve hesap aynen korunuyor. */
 /* Kuyruk eskiden sabit FEATHER_PER=20 ile 180 kelimede (içeriğin ~%40'ında) tavan yapıyordu;
    320 kelime + 120 phrasal verb = 440 birimin tamamına yayılsın diye orantılı hesaplanıyor —
    içerik büyürse (yeni kelime/PV eklenirse) yeniden elle ayarlamaya gerek kalmaz. */
@@ -2556,15 +2533,14 @@ const FEATHER_COLORS = ["#ff8fa3","#ffd166","#5ec9c0"];
 function featherCount(p){ return Math.min(FEATHER_MAX, FEATHER_BASE + Math.floor((p.learned.length + pvOf(p).learned.length) / FEATHER_PER)); }
 function renderMeceTail(p){
   const n = featherCount(p);
-  /* Yelpaze: tüyler -78° (yukarı) ile +12° (aşağı) arasında eşit dağılır; 3 tüyde orijinal duruş korunur */
-  const a0 = n<=3 ? -40 : -78, a1 = n<=3 ? 5 : 12;
+  /* Rozet: her tüy küçük bir renkli çubuk — koleksiyon büyüdükçe rozet görünür şekilde uzar */
+  const w = n*9 + 4;
   let html = "";
   for(let i=0;i<n;i++){
-    const a = n===1 ? a0 : a0 + (a1-a0)*i/(n-1);
     const c = FEATHER_COLORS[i % FEATHER_COLORS.length];
-    html += `<g transform="rotate(${a.toFixed(1)} 136 140)"><rect x="92" y="133" width="40" height="14" rx="7" fill="${c}"/><circle cx="100" cy="140" r="2.6" fill="#fff" opacity="0.75"/></g>`;
+    html += `<rect x="${4+i*9}" y="2" width="6.5" height="14" rx="3.25" fill="${c}"/>`;
   }
-  $("mece-tail").innerHTML = html;
+  $("mece-tail").innerHTML = `<svg width="${w}" height="18" viewBox="0 0 ${w} 18" aria-hidden="true">${html}</svg><span>${n}</span>`;
 }
 function showFeathers(){
   const p = P(), n = featherCount(p);
