@@ -127,7 +127,8 @@
   /* onboarding */
   .logo { font-size: 2.125rem; font-weight: 800; letter-spacing: -0.03em; text-align: center; margin-top: 40px; }
   .logo span { color: var(--mece); }
-  .tagline { text-align: center; color: var(--muted); font-size: 0.9375rem; margin: 8px 0 36px; }
+  .tagline { text-align: center; color: var(--muted); font-size: 0.9375rem; margin: 8px 0 20px; }
+  .onboard-mece { display: block; width: 158px; margin: 14px auto 12px; }
   .lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
   .lang-opt {
     display: flex; align-items: center; gap: 10px; padding: 14px 16px;
@@ -264,15 +265,16 @@
   <div id="scr-onboard" class="screen">
     <div class="logo">keli<span>mece</span></div>
     <div class="tagline">Her gün 10 yeni kelime. Seviyene göre, dilediğin dilde.</div>
+    <div class="mece-bubble" style="margin-top:16px"><b>Merhaba! Ben Mece 🐦</b><br>Sana en uygun kelimelerle başlayabilmemiz için kısa bir seviye tespiti yapacağız.<br>Bu bir sınav değil ve yaklaşık 1 dakika sürecek.<br><b>Hazırsan başlayalım!</b></div>
+    <img class="onboard-mece" src="mece-egg.png" alt="Mece kanadında bir yumurtayla gülümsüyor">
     <div class="card">
-      <h2>Merhaba 👋</h2>
-      <p class="sub">Adını yaz, öğrenmek istediğin dili seç. Kısa bir seviye testiyle başlayalım.</p>
+      <p class="sub">Adını yaz, öğrenmek istediğin dili seç.</p>
       <div style="margin-top:16px">
         <input type="text" id="inp-name" placeholder="Adın" maxlength="20">
       </div>
       <div class="lang-grid" id="onboard-langs"></div>
       <div style="margin-top:18px">
-        <button class="btn" id="btn-start-test" disabled>Seviye Testine Başla</button>
+        <button class="btn" id="btn-start-test" disabled>Seviye Tespitine Başla</button>
       </div>
     </div>
   </div>
@@ -2381,9 +2383,10 @@ function finishPlacement(level, passedAll){
   $("testresult-mece").innerHTML = birdFace(passedAll ? "party" : "cheer", 64);
   $("testresult-level").textContent = `Seviye ${level} · ${levelName(level)}`;
   const stat = `Toplam ${test.totalQ} soruda ${test.totalOk} doğru yaptın.`;
-  $("testresult-detail").textContent = passedAll
+  const featherNote = " Bu arada: sen öğrendikçe tüy koleksiyonum büyüyor 🪶 — ana sayfada, resmimin köşesindeki rozetten takip edebilirsin.";
+  $("testresult-detail").textContent = (passedAll
     ? `Tüm seviyeleri geçtin, etkileyici! ${stat} En üst seviyeden başlıyorsun.`
-    : `${stat} ${LANGS[test.lang].name} yolculuğun ${level}. seviyeden başlıyor.`;
+    : `${stat} ${LANGS[test.lang].name} yolculuğun ${level}. seviyeden başlıyor.`) + featherNote;
   show("scr-testresult");
 }
 
