@@ -146,6 +146,22 @@
   .brand-bird { flex-shrink: 0; display: block; }
   .hero-wrap { position: relative; max-width: 300px; margin: 4px auto 10px; }
   .hero-illo { display: block; width: 100%; }
+  /* Mece animasyonları: yalnızca transform (pil dostu); reduced-motion'da kapalı */
+  .mece-svg { display: block; width: 100%; height: auto; }
+  .m-bird, .m-shadow, .m-crest, .m-wingR, .m-tail, .m-eyeball { transform-box: fill-box; }
+  .m-bird { transform-origin: 50% 100%; animation: mece-breathe 3.4s ease-in-out infinite; }
+  .m-shadow { transform-origin: 50% 50%; animation: mece-shadowp 3.4s ease-in-out infinite; }
+  .m-crest { transform-origin: 50% 100%; animation: mece-crest 3.4s ease-in-out infinite; }
+  .m-wingR { transform-origin: 12% 82%; animation: mece-wave 4.6s ease-in-out infinite; }
+  .m-tail { transform-origin: 96% 50%; animation: mece-tailw 5.2s ease-in-out infinite; }
+  .m-eyeball { transform-origin: 50% 50%; animation: mece-blink 4.8s infinite; }
+  @keyframes mece-breathe { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }
+  @keyframes mece-shadowp { 0%,100% { transform: scaleX(1); opacity: .10 } 50% { transform: scaleX(.93); opacity: .07 } }
+  @keyframes mece-crest { 0%,100% { transform: rotate(-2.5deg) } 50% { transform: rotate(2.5deg) } }
+  @keyframes mece-wave { 0%, 55%, 100% { transform: rotate(0deg) } 65% { transform: rotate(-14deg) } 75% { transform: rotate(7deg) } 85% { transform: rotate(-9deg) } }
+  @keyframes mece-tailw { 0%, 70%, 100% { transform: rotate(0deg) } 80% { transform: rotate(4deg) } 90% { transform: rotate(-3deg) } }
+  @keyframes mece-blink { 0%, 91.9%, 96.1%, 100% { transform: scaleY(1) } 94% { transform: scaleY(0.06) } }
+  @media (prefers-reduced-motion: reduce) { .m-bird, .m-shadow, .m-crest, .m-wingR, .m-tail, .m-eyeball { animation: none } }
   .feather-badge { position: absolute; right: -6px; bottom: 4px; display: flex; align-items: center; gap: 6px; background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 5px 11px; font-size: 0.8125rem; font-weight: 700; font-family: inherit; color: inherit; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.10); }
   .feather-badge svg { display: block; }
   .mece-bubble { position: relative; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 10px 14px; font-size: 0.8438rem; line-height: 1.45; max-width: 320px; margin: 0 auto; text-align: center; }
@@ -266,7 +282,7 @@
     <div class="logo">keli<span>mece</span></div>
     <div class="tagline">Her gün 10 yeni kelime. Seviyene göre, dilediğin dilde.</div>
     <div class="mece-bubble" style="margin-top:16px"><b>Merhaba! Ben Mece 🐦</b><br>Sana en uygun kelimelerle başlayabilmemiz için kısa bir seviye tespiti yapacağız.<br>Bu bir sınav değil ve yaklaşık 1 dakika sürecek.<br><b>Hazırsan başlayalım!</b></div>
-    <img class="onboard-mece" src="mece-egg.png" alt="Mece kanadında bir yumurtayla gülümsüyor">
+    <div id="mece-onboard" class="onboard-mece" role="img" aria-label="Mece gülümseyerek el sallıyor"></div>
     <div class="card">
       <p class="sub">Adını yaz, öğrenmek istediğin dili seç.</p>
       <div style="margin-top:16px">
@@ -314,7 +330,7 @@
     </div>
     <div class="mece-bubble" id="mece-bubble"></div>
     <div class="hero-wrap">
-      <img class="hero-illo" src="mece-hero.png" alt="Mece büyük bir kitabın üzerinde" onclick="showFeathers()" style="cursor:pointer">
+      <div id="mece-home" class="hero-illo" role="img" aria-label="Mece büyük bir kitabın üzerinde el sallıyor" onclick="showFeathers()" style="cursor:pointer"></div>
       <button class="feather-badge" id="mece-tail" type="button" onclick="showFeathers()" aria-label="Mece'nin tüy koleksiyonu"></button>
     </div>
     <div class="stat-row">
@@ -2524,6 +2540,89 @@ function birdFace(mood, size){
     + "<ellipse cx='7.5' cy='21' rx='2.4' ry='1.6' fill='#ff8fa3' opacity='0.65'/><ellipse cx='24.5' cy='21' rx='2.4' ry='1.6' fill='#ff8fa3' opacity='0.65'/>"
     + extra + "</svg>";
 }
+/* ============ ANİMASYONLU SVG MECE ============
+   3D render paletinden türetilen, katmanlı (rig'li) vektör maskot. Her parça ayrı grup:
+   CSS keyframe'leri nefes, göz kırpma, taç esnemesi, kanat selamı ve kuyruk kıpırtısını sürer.
+   İki örnek aynı anda DOM'da durur (onboarding + ana sayfa); degrade id'leri aynı tanımın
+   kopyası olduğundan çakışma zararsızdır. book:true kitap platformu ekler. */
+function meceMarkup(opts){
+  const book = !!(opts && opts.book);
+  const vbH = book ? 372 : 340;
+  const shadow = book
+    ? `<ellipse class="m-shadow" cx="190" cy="356" rx="118" ry="10" fill="#3a2a12" opacity="0.10"/>`
+    : `<ellipse class="m-shadow" cx="190" cy="319" rx="76" ry="11" fill="#3a2a12" opacity="0.10"/>`;
+  const bookG = book ? `
+  <g class="m-book">
+    <path d="M190,308 C146,292 96,294 52,307 L52,340 C96,327 146,325 190,342 Z" fill="#7b6ede"/>
+    <path d="M190,308 C234,292 284,294 328,307 L328,340 C284,327 234,325 190,342 Z" fill="#7b6ede"/>
+    <path d="M190,302 C148,288 102,290 60,302 L60,328 C102,316 148,314 190,329 Z" fill="#fffdf6" stroke="#e4d9c4" stroke-width="1"/>
+    <path d="M190,302 C232,288 278,290 320,302 L320,328 C278,316 232,314 190,329 Z" fill="#fffdf6" stroke="#e4d9c4" stroke-width="1"/>
+    <path d="M84,305 C114,297 148,296 176,304" fill="none" stroke="#ddd2ba" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M84,312 C114,304 148,303 176,311" fill="none" stroke="#ddd2ba" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M204,304 C232,296 266,297 296,305" fill="none" stroke="#ddd2ba" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M204,311 C232,303 266,304 296,312" fill="none" stroke="#ddd2ba" stroke-width="1.6" stroke-linecap="round"/>
+    <line x1="190" y1="302" x2="190" y2="329" stroke="#e4d9c4" stroke-width="1.4"/>
+    <g transform="rotate(8 306 330)"><rect x="299" y="318" width="15" height="22" rx="3" fill="#f2839b"/><path d="M303,326 a2.1,2.1 0 0 1 3.5,-1.5 a2.1,2.1 0 0 1 3.5,1.5 q0,2.5 -3.5,4.6 q-3.5,-2.1 -3.5,-4.6 Z" fill="#fff" opacity="0.9"/></g>
+  </g>` : "";
+  return `<svg class="mece-svg" viewBox="0 0 380 ${vbH}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs>
+    <radialGradient id="gBody" cx="0.42" cy="0.32" r="0.85"><stop offset="0" stop-color="#ffdf9a"/><stop offset="0.45" stop-color="#fec963"/><stop offset="0.8" stop-color="#f7ab3f"/><stop offset="1" stop-color="#ee9430"/></radialGradient>
+    <radialGradient id="gBelly" cx="0.5" cy="0.35" r="0.8"><stop offset="0" stop-color="#fff6e3"/><stop offset="0.6" stop-color="#ffe9c4"/><stop offset="1" stop-color="#f8d49c"/></radialGradient>
+    <linearGradient id="gPink" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffbcb4"/><stop offset="1" stop-color="#f8878f"/></linearGradient>
+    <linearGradient id="gYellow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe396"/><stop offset="1" stop-color="#f9c153"/></linearGradient>
+    <linearGradient id="gTeal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#93e0da"/><stop offset="1" stop-color="#54bdb5"/></linearGradient>
+    <linearGradient id="gPinkH" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffbcb4"/><stop offset="1" stop-color="#f8878f"/></linearGradient>
+    <linearGradient id="gYellowH" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffe396"/><stop offset="1" stop-color="#f9c153"/></linearGradient>
+    <linearGradient id="gTealH" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#93e0da"/><stop offset="1" stop-color="#54bdb5"/></linearGradient>
+    <radialGradient id="gWing" cx="0.4" cy="0.3" r="0.9"><stop offset="0" stop-color="#fbbd63"/><stop offset="0.7" stop-color="#f0993d"/><stop offset="1" stop-color="#e07f2e"/></radialGradient>
+    <linearGradient id="gBeakTop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fc9040"/><stop offset="1" stop-color="#e85c1c"/></linearGradient>
+    <linearGradient id="gLeg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2873a"/><stop offset="1" stop-color="#e06f24"/></linearGradient>
+    <radialGradient id="gGlow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffffff" stop-opacity="0.5"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+  </defs>
+  ${shadow}${bookG}
+  <g class="m-bird">
+    <g class="m-tail">
+      <g transform="rotate(-30 108 206)"><rect x="34" y="196" width="76" height="20" rx="10" fill="url(#gTealH)"/><circle cx="47" cy="206" r="4" fill="#fff" opacity="0.85"/></g>
+      <g transform="rotate(-6 108 222)"><rect x="26" y="212" width="84" height="20" rx="10" fill="url(#gYellowH)"/><circle cx="39" cy="222" r="4" fill="#fff" opacity="0.9"/></g>
+      <g transform="rotate(20 108 238)"><rect x="34" y="228" width="76" height="20" rx="10" fill="url(#gPinkH)"/><circle cx="47" cy="238" r="4" fill="#fff" opacity="0.85"/></g>
+    </g>
+    <g class="m-crest">
+      <g transform="rotate(-24 170 112)"><rect x="161" y="58" width="18" height="60" rx="9" fill="url(#gPink)"/></g>
+      <rect x="181" y="46" width="19" height="70" rx="9.5" fill="url(#gYellow)"/>
+      <g transform="rotate(24 210 112)"><rect x="201" y="58" width="18" height="60" rx="9" fill="url(#gTeal)"/></g>
+    </g>
+    <g class="m-legs">
+      <rect x="168" y="274" width="7" height="30" rx="3.5" fill="url(#gLeg)"/>
+      <rect x="205" y="274" width="7" height="30" rx="3.5" fill="url(#gLeg)"/>
+      <g><ellipse cx="163" cy="307" rx="8" ry="6.5" fill="#ef7f30"/><ellipse cx="172" cy="309" rx="8.5" ry="7" fill="#f28a38"/><ellipse cx="181" cy="307" rx="8" ry="6.5" fill="#ef7f30"/></g>
+      <g><ellipse cx="200" cy="307" rx="8" ry="6.5" fill="#ef7f30"/><ellipse cx="209" cy="309" rx="8.5" ry="7" fill="#f28a38"/><ellipse cx="218" cy="307" rx="8" ry="6.5" fill="#ef7f30"/></g>
+    </g>
+    <g class="m-body">
+      <ellipse cx="190" cy="195" rx="93" ry="89" fill="url(#gBody)"/>
+      <path d="M106,225 C128,276 252,276 274,225 C254,266 126,266 106,225 Z" fill="#d97f22" opacity="0.25"/>
+      <ellipse cx="156" cy="138" rx="52" ry="34" fill="url(#gGlow)"/>
+      <ellipse cx="190" cy="232" rx="56" ry="45" fill="url(#gBelly)"/>
+    </g>
+    <g class="m-wingR">
+      <path d="M262,180 C256,150 264,120 286,108 C291,119 290,129 286,138 C296,124 310,116 322,117 C319,130 312,140 303,147 C314,143 325,145 332,152 C323,163 311,169 298,171 C305,175 308,182 307,189 C288,194 270,192 262,180 Z" fill="url(#gWing)"/>
+      <path d="M284,116 C272,128 268,152 271,172" stroke="#ffca7a" stroke-width="5" stroke-linecap="round" fill="none" opacity="0.5"/>
+    </g>
+    <g class="m-face">
+      <path d="M143,146 Q155,139 166,145" stroke="#7a4a12" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+      <path d="M212,145 Q223,139 235,146" stroke="#7a4a12" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+      <g class="m-eyeball"><circle cx="156" cy="172" r="16.5" fill="#2e2013"/><circle cx="162" cy="166" r="5.6" fill="#fff"/><circle cx="151" cy="178" r="2.6" fill="#fff" opacity="0.9"/></g>
+      <g class="m-eyeball"><circle cx="222" cy="172" r="16.5" fill="#2e2013"/><circle cx="228" cy="166" r="5.6" fill="#fff"/><circle cx="217" cy="178" r="2.6" fill="#fff" opacity="0.9"/></g>
+      <ellipse cx="136" cy="197" rx="12" ry="8" fill="#ff8fa3" opacity="0.55"/>
+      <ellipse cx="242" cy="197" rx="12" ry="8" fill="#ff8fa3" opacity="0.55"/>
+      <g class="m-beak">
+        <path d="M172,200 Q189,222 206,200 Q189,212 172,200 Z" fill="#8a2f08"/>
+        <path d="M170,196 Q189,182 208,196 Q202,206 189,207 Q176,206 170,196 Z" fill="url(#gBeakTop)"/>
+        <path d="M177,192 Q189,186 201,192" stroke="#ffb27a" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.7"/>
+      </g>
+    </g>
+  </g>
+</svg>`;
+}
 /* Tüy koleksiyonu: Mece 3 tüyle başlar, düzenli aralıklarla 1 tüy eklenir (maks 12).
    Eskiden tüyler ana ekrandaki SVG kuşun kuyruğuna çiziliyordu; maskot 3D görsele geçince
    koleksiyon, görselin köşesindeki rozete taşındı — özellik ve hesap aynen korunuyor. */
@@ -3101,6 +3200,8 @@ function startVerify(){
 
 /* ============ BAŞLANGIÇ ============ */
 applyTheme();
+$("mece-onboard").innerHTML = meceMarkup();
+$("mece-home").innerHTML = meceMarkup({ book:true });
 loadState();
 if(S && S.activeLang && S.langs[S.activeLang]){
   showHome();
