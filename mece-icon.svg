@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="iBg" cx="0.5" cy="0.28" r="0.95">
+      <stop offset="0" stop-color="#9486ee"/>
+      <stop offset="0.65" stop-color="#8371e2"/>
+      <stop offset="1" stop-color="#6f5ad2"/>
+    </radialGradient>
+    <radialGradient id="iBody" cx="0.42" cy="0.3" r="0.85">
+      <stop offset="0" stop-color="#ffdf9a"/>
+      <stop offset="0.45" stop-color="#fec963"/>
+      <stop offset="0.8" stop-color="#f7ab3f"/>
+      <stop offset="1" stop-color="#ee9430"/>
+    </radialGradient>
+    <radialGradient id="iBelly" cx="0.5" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#fff6e3"/>
+      <stop offset="0.6" stop-color="#ffe9c4"/>
+      <stop offset="1" stop-color="#f8d49c"/>
+    </radialGradient>
+    <linearGradient id="iPink" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffbcb4"/><stop offset="1" stop-color="#f8878f"/></linearGradient>
+    <linearGradient id="iYellow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe396"/><stop offset="1" stop-color="#f9c153"/></linearGradient>
+    <linearGradient id="iTeal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#93e0da"/><stop offset="1" stop-color="#54bdb5"/></linearGradient>
+    <linearGradient id="iPinkH" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f8878f"/><stop offset="1" stop-color="#ffbcb4"/></linearGradient>
+    <linearGradient id="iYellowH" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f9c153"/><stop offset="1" stop-color="#ffe396"/></linearGradient>
+    <linearGradient id="iTealH" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#54bdb5"/><stop offset="1" stop-color="#93e0da"/></linearGradient>
+    <linearGradient id="iBeak" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fc9040"/><stop offset="1" stop-color="#e85c1c"/></linearGradient>
+    <linearGradient id="iCover" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7b68e0"/><stop offset="1" stop-color="#5b47c4"/></linearGradient>
+    <radialGradient id="iGlow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffffff" stop-opacity="0.45"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+  </defs>
+
+  <!-- beyaz zemin + mor yuvarlak kare -->
+  <rect x="0" y="0" width="512" height="512" fill="#ffffff"/>
+  <rect x="30" y="30" width="452" height="452" rx="110" fill="url(#iBg)"/>
+
+  <!-- kuyruk tüyleri: iki yanda simetrik üçlü (kitabın arkasından taşar) -->
+  <g id="tuyler-sol">
+    <g transform="rotate(-52 150 300)"><rect x="62" y="286" width="88" height="27" rx="13.5" fill="url(#iTealH)"/><circle cx="78" cy="299.5" r="5.5" fill="#fff" opacity="0.85"/></g>
+    <g transform="rotate(-30 150 334)"><rect x="52" y="320" width="98" height="27" rx="13.5" fill="url(#iYellowH)"/><circle cx="68" cy="333.5" r="5.5" fill="#fff" opacity="0.9"/></g>
+    <g transform="rotate(-8 150 368)"><rect x="62" y="354" width="88" height="27" rx="13.5" fill="url(#iPinkH)"/><circle cx="78" cy="367.5" r="5.5" fill="#fff" opacity="0.85"/></g>
+  </g>
+  <g transform="translate(512,0) scale(-1,1)">
+    <g transform="rotate(-52 150 300)"><rect x="62" y="286" width="88" height="27" rx="13.5" fill="url(#iTealH)"/><circle cx="78" cy="299.5" r="5.5" fill="#fff" opacity="0.85"/></g>
+    <g transform="rotate(-30 150 334)"><rect x="52" y="320" width="98" height="27" rx="13.5" fill="url(#iYellowH)"/><circle cx="68" cy="333.5" r="5.5" fill="#fff" opacity="0.9"/></g>
+    <g transform="rotate(-8 150 368)"><rect x="62" y="354" width="88" height="27" rx="13.5" fill="url(#iPinkH)"/><circle cx="78" cy="367.5" r="5.5" fill="#fff" opacity="0.85"/></g>
+  </g>
+
+  <!-- taç tüyleri -->
+  <g>
+    <g transform="rotate(-26 226 160)"><rect x="213" y="88" width="26" height="82" rx="13" fill="url(#iPink)"/></g>
+    <rect x="243" y="72" width="27" height="94" rx="13.5" fill="url(#iYellow)"/>
+    <g transform="rotate(26 286 160)"><rect x="273" y="88" width="26" height="82" rx="13" fill="url(#iTeal)"/></g>
+  </g>
+
+  <!-- gövde + yüz -->
+  <g>
+    <circle cx="256" cy="290" r="132" fill="url(#iBody)"/>
+    <ellipse cx="208" cy="212" rx="72" ry="46" fill="url(#iGlow)"/>
+    <ellipse cx="256" cy="392" rx="84" ry="66" fill="url(#iBelly)"/>
+    <path d="M196,178 Q212,168 228,177" stroke="#7a4a12" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <path d="M284,177 Q300,168 316,178" stroke="#7a4a12" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <g>
+      <circle cx="207" cy="248" r="24" fill="#2e2013"/>
+      <circle cx="215" cy="239" r="8" fill="#fff"/>
+      <circle cx="199" cy="257" r="3.8" fill="#fff" opacity="0.9"/>
+    </g>
+    <g>
+      <circle cx="305" cy="248" r="24" fill="#2e2013"/>
+      <circle cx="313" cy="239" r="8" fill="#fff"/>
+      <circle cx="297" cy="257" r="3.8" fill="#fff" opacity="0.9"/>
+    </g>
+    <ellipse cx="176" cy="284" rx="17" ry="11.5" fill="#ff8fa3" opacity="0.6"/>
+    <ellipse cx="336" cy="284" rx="17" ry="11.5" fill="#ff8fa3" opacity="0.6"/>
+    <g>
+      <path d="M231,290 Q256,322 281,290 Q256,307 231,290 Z" fill="#8a2f08"/>
+      <path d="M228,284 Q256,264 284,284 Q275,299 256,300 Q237,299 228,284 Z" fill="url(#iBeak)"/>
+      <path d="M238,279 Q256,270 274,279" stroke="#ffb27a" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.7"/>
+    </g>
+  </g>
+
+  <!-- açık kitap (önde, mor kapaklı) -->
+  <g>
+    <path d="M256,404 C190,376 110,380 48,400 L48,462 C110,444 190,442 256,470 Z" fill="url(#iCover)"/>
+    <path d="M256,404 C322,376 402,380 464,400 L464,462 C402,444 322,442 256,470 Z" fill="url(#iCover)"/>
+    <path d="M256,396 C196,372 124,375 66,393 L66,438 C124,422 196,420 256,444 Z" fill="#fdf6e8"/>
+    <path d="M256,396 C316,372 388,375 446,393 L446,438 C388,422 316,420 256,444 Z" fill="#fdf6e8"/>
+    <path d="M96,398 C138,388 186,386 226,396" fill="none" stroke="#e6d9bd" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M96,410 C138,400 186,398 226,408" fill="none" stroke="#e6d9bd" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M286,396 C326,386 374,388 416,398" fill="none" stroke="#e6d9bd" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M286,408 C326,398 374,400 416,410" fill="none" stroke="#e6d9bd" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M256,396 L256,444" stroke="#e6d9bd" stroke-width="2.5"/>
+    <g transform="rotate(6 420 448)"><rect x="410" y="430" width="22" height="34" rx="4" fill="#f2839b"/><path d="M416,442 a3,3 0 0 1 5,-2.2 a3,3 0 0 1 5,2.2 q0,3.6 -5,6.6 q-5,-3 -5,-6.6 Z" fill="#fff" opacity="0.9"/></g>
+  </g>
+</svg>

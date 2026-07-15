@@ -1,7 +1,7 @@
 /* Kelimece service worker.
    Strateji: index (navigasyon) için network-first — push'lanan güncellemeler hemen gelsin,
    ağ yoksa önbellekten çalışsın. İkon/manifest gibi statikler cache-first. */
-const CACHE = "kelimece-v4";
+const CACHE = "kelimece-v5";
 const STATIC = ["icon-192.png", "icon-512.png", "apple-touch-icon.png", "manifest.json"];
 
 self.addEventListener("install", e => {
