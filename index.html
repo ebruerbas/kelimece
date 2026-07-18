@@ -138,6 +138,31 @@
   @media (hover: hover) {.lang-opt:hover { border-color: #c7c5c3; }}
   .lang-opt.sel { border-color: var(--accent); background: var(--accent-soft); }
   .lang-opt .flag { font-size: 1.375rem; }
+  /* seviye tespiti: öz değerlendirme + yazma/dizme/eşleştirme soru tipleri */
+  .sa-opt { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border: 1.5px solid var(--border); border-radius: 14px; background: var(--card); cursor: pointer; margin-top: 10px; transition: border-color .15s; }
+  @media (hover: hover) { .sa-opt:hover { border-color: var(--accent); } }
+  .sa-opt .ico { font-size: 1.375rem; line-height: 1.3; }
+  .sa-opt .tt { font-weight: 700; font-size: 0.9375rem; }
+  .sa-opt .dd { color: var(--muted); font-size: 0.8125rem; margin-top: 2px; }
+  .t-sentence { font-size: 1.0625rem; line-height: 1.65; text-align: center; margin: 8px 0 2px; }
+  .t-sentence .blank { display: inline-block; min-width: 56px; border-bottom: 2px solid var(--accent); }
+  .t-hint { text-align: center; color: var(--muted); font-size: 0.875rem; margin-top: 10px; }
+  .t-hint b { letter-spacing: 0.06em; }
+  .slots { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 14px 0 2px; }
+  .slot { width: 34px; height: 42px; border: 1.5px dashed var(--border); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.125rem; background: var(--card); cursor: pointer; }
+  .slot.filled { border-style: solid; border-color: var(--accent); }
+  .slot.sep { border: none; background: none; width: 12px; cursor: default; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 14px; }
+  .chip { min-width: 40px; height: 46px; padding: 0 10px; border: 1.5px solid var(--border); border-radius: 12px; background: var(--card); font-weight: 800; font-size: 1.125rem; cursor: pointer; color: inherit; font-family: inherit; }
+  .chip:disabled { opacity: 0.25; cursor: default; }
+  .match-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; margin-top: 10px; }
+  .match-btn { padding: 12px 10px; border: 1.5px solid var(--border); border-radius: 12px; background: var(--card); font-weight: 600; font-size: 0.9375rem; cursor: pointer; text-align: center; color: inherit; font-family: inherit; }
+  .match-btn.sel { border-color: var(--accent); background: var(--accent-soft); }
+  .match-btn.done { border-color: var(--green, #3aa76d); opacity: 0.45; cursor: default; }
+  .match-btn.bad { border-color: #e0524f; animation: t-shake .3s; }
+  @keyframes t-shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-4px) } 75% { transform: translateX(4px) } }
+  .t-feedback { text-align: center; margin-top: 10px; font-weight: 700; min-height: 22px; font-size: 0.9375rem; }
+  .t-feedback.ok { color: #2f9e63; } .t-feedback.bad { color: #e0524f; }
 
   /* header */
   .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
@@ -295,16 +320,27 @@
     </div>
   </div>
 
+  <!-- SENİ TANIYALIM (öz değerlendirme) -->
+  <div id="scr-selfassess" class="screen">
+    <button class="back" onclick="abortTest()">‹ Geri</button>
+    <div class="mece-bubble" style="margin-top:14px" id="sa-bubble"></div>
+    <div id="sa-mece" class="onboard-mece" role="img" aria-label="Mece seni dinliyor"></div>
+    <div class="card">
+      <p class="sub" style="margin-bottom:4px">Sana en uygun başlangıcı seçelim:</p>
+      <div class="sa-opt" onclick="saPick('new')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')saPick('new')"><span class="ico">🌱</span><div><div class="tt">Yeni başlıyorum</div><div class="dd">Sıfırdan ya da çok az biliyorum — temelden başlayalım.</div></div></div>
+      <div class="sa-opt" onclick="saPick('some')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')saPick('some')"><span class="ico">🌿</span><div><div class="tt">Biraz biliyorum</div><div class="dd">Günlük kelimeleri tanıyorum, nereden başlamalıyım bilmiyorum.</div></div></div>
+      <div class="sa-opt" onclick="saPick('good')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')saPick('good')"><span class="ico">🌳</span><div><div class="tt">Biliyorum ama konuşamıyorum</div><div class="dd">Okuyup anlıyorum; kelime hazinemi güçlendirmek istiyorum.</div></div></div>
+    </div>
+  </div>
+
   <!-- PLACEMENT TEST -->
   <div id="scr-test" class="screen">
-    <button class="back" id="test-back" onclick="abortTest()" style="display:none">‹ Ana sayfa</button>
+    <button class="back" id="test-back" onclick="abortTest()">‹ Geri</button>
     <div id="test-mece" style="text-align:center;margin-bottom:6px"></div>
     <div class="counter" id="test-counter"></div>
     <div class="progress-wrap" style="margin-bottom:22px"><div class="progress-bar" id="test-progress" style="width:0%"></div></div>
     <div class="card">
-      <p class="sub" style="text-align:center;margin-bottom:6px">Bu kelimenin Türkçesi ne?</p>
-      <div class="bigword" id="test-word"></div>
-      <div id="test-opts" style="margin-top:18px"></div>
+      <div id="test-area"></div>
     </div>
   </div>
 
@@ -2886,18 +2922,39 @@ $("btn-start-test").addEventListener("click", ()=>{
   startPlacement(obLang);
 });
 
-/* ============ SEVİYE TESTİ (adaptif) ============
-   Her seviyeden 8 soru sorulur. 8'de 7 doğru → bir üst seviyeye geç.
-   Geçemediğin seviye, senin seviyendir. (Çeldiriciler artık aynı seviyeden seçildiği için
-   eskisinden daha zor eleniyor; eşik de 5/6'dan 7/8'e çıkarılarak biraz sıkılaştırıldı.) */
-const TEST_PER_LEVEL = 8;
-const TEST_PASS = 7;
+/* ============ SEVİYE TESPİTİ: Seni Tanıyalım + karışık formatlı hızlı quiz ============
+   Eski akışın sorunları: doğrudan sınava düşülüyordu, seviye başına 8 çoktan seçmeli soru
+   hem uzundu hem tahminle tutturulabiliyordu. Yeni akış:
+   1) Öz değerlendirme ("Seni tanıyalım"): yeni başlayan quiz'e HİÇ girmez, Seviye 1'den başlar.
+      Diğerleri bandına uygun basamak merdiveninden başlar (biraz→2, ileri→6).
+   2) Quiz çoktan seçmeli DEĞİL — üç format döner:
+      - Cümle boşluğu (şimdilik yalnız EN; cümle verisi diğer dillere gelince otomatik açılır):
+        örnek cümlede eksik kelimeyi TR anlam + ilk harf/harf sayısı ipucuyla YAZAR.
+      - Harf dizme: kelimenin karışık harflerini sırayla dizer.
+      - Eşleştirme: 4 kelime ↔ 4 anlam (aynı turda eş anlamlı TR karşılıklar filtrelenir;
+        2+ hatalı deneme = tur yanlış sayılır). Tur, tek soru olarak puanlanır.
+      Serbest anlam çevirisi hiç yazdırılmaz — "goal/target→hedef" tarzı eş anlam mağduriyeti olmaz.
+   3) Her basamakta 2 soru: en az 1 doğru → üst basamak; 0/2 → bitiş. Toplam 3. yanlışta
+      quiz her durumda biter. Seviye = geçilen son basamak (hiç geçemediyse banda göre taban). */
+const SA_LADDER = { some: [2,4,6,9,12,16,20,25,30,35], good: [6,9,12,16,20,25,30,35] };
+const SA_FLOOR  = { some: 1, good: 3 };
 let test = null;
 function startPlacement(lang){
-  test = { lang, level:1, qs: sample(levelWords(1), TEST_PER_LEVEL), i:0, correct:0, totalQ:0, totalOk:0 };
-  $("test-back").style.display = "inline-flex";
+  test = { lang, stage:"sa" };
+  $("sa-bubble").innerHTML = `<b>Seni tanıyalım!</b><br>${LANGS[lang].name} ile aran nasıl? Doğru cevap yok — sadece doğru yerden başlayalım diye soruyorum.`;
+  show("scr-selfassess");
+}
+function saPick(kind){
+  const lang = test.lang;
+  if(kind === "new"){
+    test = { lang, kind, totalQ:0, totalOk:0 };
+    finishPlacement(1, false, true);
+    return;
+  }
+  test = { lang, kind, ladder: SA_LADDER[kind], li:0, qi:0, rungOk:0, wrongs:0,
+           lastPassed:0, totalQ:0, totalOk:0, used:[], cur:null };
   show("scr-test");
-  renderTestQ();
+  nextTestQ();
 }
 /* Seviye geçişlerinde çıkan motivasyon sözleri (sırayla, artan coşkuyla) */
 const MOTIV = [
@@ -2954,55 +3011,195 @@ $("motiv-cancel-btn").addEventListener("click", ()=>{
   motivCb = null;
   $("motiv-modal").classList.remove("open");
 });
-function renderTestQ(){
-  const wi = test.qs[test.i];
+function testLevel(){ return test.ladder[test.li]; }
+function testHeader(){
   $("test-mece").innerHTML = birdFace("happy", 40);
-  $("test-counter").textContent = `Seviye ${test.level} testi — Soru ${test.i+1} / ${TEST_PER_LEVEL}`;
-  /* Çubuk sadece içinde bulunulan seviyenin ilerlemesini gösterir */
-  $("test-progress").style.width = (test.i/TEST_PER_LEVEL*100)+"%";
-  $("test-word").textContent = wFor(wi, test.lang);
-  const distract = pickDistractors(wi, 3, wTr);
-  const opts = shuffle([wi, ...distract]);
-  $("test-opts").innerHTML = opts.map(k=>
-    `<button class="q-opt" onclick="testAnswer(${k},${wi},this)">${esc(wTr(k))}</button>`).join("");
+  $("test-counter").textContent = `Soru ${test.totalQ+1} · Kalan hak: ${"🧡".repeat(3-test.wrongs)}`;
+  $("test-progress").style.width = (test.li/test.ladder.length*100)+"%";
 }
-function testAnswer(sel, correct, btn){
-  document.querySelectorAll("#test-opts .q-opt").forEach(b=>b.onclick=null);
-  test.totalQ++;
-  if(sel===correct){ btn.classList.add("correct"); test.correct++; test.totalOk++; $("test-mece").innerHTML = birdFace("cheer", 40); }
-  else { btn.classList.add("wrong"); $("test-mece").innerHTML = birdFace("oops", 40); }
-  setTimeout(()=>{
-    test.i++;
-    /* Kalan sorularla geçme şansı kalmadıysa seviyeyi erken bitir */
-    const remaining = TEST_PER_LEVEL - test.i;
-    const canStillPass = test.correct + remaining >= TEST_PASS;
-    if(test.i < TEST_PER_LEVEL && canStillPass){ renderTestQ(); return; }
-    /* seviye bitti: geçti mi? */
-    if(test.correct >= TEST_PASS){
-      if(test.level >= LEVEL_COUNT){ finishPlacement(LEVEL_COUNT, true); return; }
-      const passed = test.level;
-      showMotiv(passed, ()=>{
-        test.level++;
-        test.qs = sample(levelWords(test.level), TEST_PER_LEVEL);
-        test.i = 0; test.correct = 0;
-        renderTestQ();
-      });
-    } else {
-      finishPlacement(test.level, false);
+/* Basamağın kelime havuzundan, bu quizde kullanılmamış ve koşulu sağlayan bir kelime seç */
+function pickTestWord(pred){
+  let pool = levelWords(testLevel()).filter(i=>!test.used.includes(i));
+  if(pred){ const f = pool.filter(pred); if(f.length) pool = f; }
+  const wi = sample(pool,1)[0];
+  test.used.push(wi);
+  return wi;
+}
+function nextTestQ(){
+  testHeader();
+  const en = test.lang === "en";
+  let fmt;
+  if(test.qi === 0) fmt = en ? "blank" : "arrange";
+  else fmt = (test.li % 2 === 0) ? "match" : (en ? "arrange" : "match");
+  if(fmt === "blank"){
+    const wi = pickTestWord(i => !!sentenceFor(i, "en"));
+    if(sentenceFor(wi, "en")) return qBlank(wi);
+    fmt = "arrange"; test.used.pop();
+  }
+  if(fmt === "arrange"){
+    const wi = pickTestWord(i => wFor(i, test.lang).replace(/ /g,"").length <= 12);
+    return qArrange(wi);
+  }
+  qMatch();
+}
+/* Format 1 — cümle boşluğu: yazılan cevap norm() ile karşılaştırılır (aksan/büyük-küçük toleransı) */
+function qBlank(wi){
+  const s = sentenceFor(wi, "en");
+  const ans = wFor(wi, "en");
+  const mask = ans.split("").map((ch,i)=> i===0 ? ch : (ch===" " ? "&nbsp;&nbsp;" : "_")).join(" ");
+  test.cur = { fmt:"blank", wi, ans };
+  $("test-area").innerHTML =
+    `<p class="sub" style="text-align:center;margin-bottom:6px">Boşluğa gelen kelimeyi yaz</p>
+     <div class="t-sentence">${esc(s[0]).replace("___", '<span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;</span>')}</div>
+     <div class="t-hint">Türkçesi: <b>${esc(wTr(wi))}</b> &nbsp;·&nbsp; <b>${mask}</b></div>
+     <div style="margin-top:14px"><input type="text" id="t-answer" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Cevabın"></div>
+     <div style="margin-top:12px;text-align:center"><button class="btn" id="t-submit" onclick="submitTyped()">Kontrol Et</button></div>
+     <div class="t-feedback" id="t-fb"></div>`;
+  const inp = $("t-answer");
+  inp.addEventListener("keydown", e => { if(e.key === "Enter") submitTyped(); });
+  inp.focus();
+}
+function submitTyped(){
+  const val = $("t-answer").value;
+  if(!val.trim()) return;
+  $("t-answer").disabled = true; $("t-submit").disabled = true;
+  const ok = norm(val) === norm(test.cur.ans);
+  const fb = $("t-fb");
+  if(ok){ fb.textContent = "Doğru! 🎉"; fb.className = "t-feedback ok"; }
+  else { fb.textContent = `Doğrusu: ${test.cur.ans}`; fb.className = "t-feedback bad"; }
+  gradeQ(ok);
+}
+/* Format 2 — harf dizme: karışık harf çipleri sırayla dizilir; tamamlanınca otomatik kontrol */
+function qArrange(wi){
+  const ans = wFor(wi, test.lang);
+  const letters = ans.replace(/ /g, "").split("");
+  let chips = shuffle(letters);
+  if(letters.length > 2 && chips.join("") === letters.join("")) chips = shuffle(letters);
+  test.cur = { fmt:"arrange", wi, ans, chips, picked: [] };
+  $("test-area").innerHTML =
+    `<p class="sub" style="text-align:center;margin-bottom:6px">Harfleri doğru sıraya diz</p>
+     <div class="t-hint" style="margin-top:2px">Türkçesi: <b>${esc(wTr(wi))}</b></div>
+     <div class="slots" id="t-slots"></div>
+     <div class="chips" id="t-chips"></div>
+     <div style="margin-top:12px;text-align:center"><button class="btn ghost small" onclick="arrangeUndo()">⌫ Geri al</button></div>
+     <div class="t-feedback" id="t-fb"></div>`;
+  renderArrange();
+}
+function renderArrange(){
+  const c = test.cur;
+  let pi = 0;
+  $("t-slots").innerHTML = c.ans.split("").map(ch => {
+    if(ch === " ") return '<span class="slot sep"></span>';
+    const val = c.picked[pi] || "";
+    pi++;
+    return `<span class="slot ${val?"filled":""}" onclick="arrangeUndo()">${esc(val)}</span>`;
+  }).join("");
+  $("t-chips").innerHTML = c.chips.map((ch,i) =>
+    `<button class="chip" ${c.pickedIdx && c.pickedIdx.includes(i) ? "disabled" : ""} onclick="arrangePick(${i})">${esc(ch)}</button>`).join("");
+}
+function arrangePick(i){
+  const c = test.cur;
+  c.pickedIdx = c.pickedIdx || [];
+  if(c.pickedIdx.includes(i)) return;
+  c.pickedIdx.push(i);
+  c.picked.push(c.chips[i]);
+  renderArrange();
+  const need = c.ans.replace(/ /g, "").length;
+  if(c.picked.length === need){
+    const ok = c.picked.join("") === c.ans.replace(/ /g, "");
+    const fb = $("t-fb");
+    if(ok){ fb.textContent = "Doğru! 🎉"; fb.className = "t-feedback ok"; }
+    else { fb.textContent = `Doğrusu: ${c.ans}`; fb.className = "t-feedback bad"; }
+    document.querySelectorAll("#t-chips .chip").forEach(b => b.onclick = null);
+    gradeQ(ok);
+  }
+}
+function arrangeUndo(){
+  const c = test.cur;
+  if(!c.pickedIdx || !c.pickedIdx.length) return;
+  const need = c.ans.replace(/ /g, "").length;
+  if(c.picked.length === need) return; /* kontrol başladıysa dokunma */
+  c.pickedIdx.pop();
+  c.picked.pop();
+  renderArrange();
+}
+/* Format 3 — eşleştirme: 4 kelime ↔ 4 anlam; aynı turda eş anlamlı TR karşılık çıkmaz.
+   2+ hatalı deneme = tur yanlış. Tur tek soru sayılır. */
+function qMatch(){
+  const seen = new Set(); const chosen = [];
+  for(const i of shuffle(levelWords(testLevel()))){
+    const t = norm(wTr(i));
+    if(seen.has(t)) continue;
+    seen.add(t); chosen.push(i);
+    if(chosen.length === 4) break;
+  }
+  test.cur = { fmt:"match", pairs: chosen, left: shuffle(chosen), right: shuffle(chosen), selL: null, done: 0, miss: 0 };
+  $("test-area").innerHTML =
+    `<p class="sub" style="text-align:center;margin-bottom:6px">Kelimeleri anlamlarıyla eşleştir</p>
+     <div class="match-grid" id="t-match">
+       ${test.cur.left.map((wi,r) => `<button class="match-btn" id="mL${r}" onclick="matchL(${r})">${esc(wFor(wi, test.lang))}</button>
+       <button class="match-btn" id="mR${r}" onclick="matchR(${r})">${esc(wTr(test.cur.right[r]))}</button>`).join("")}
+     </div>
+     <div class="t-feedback" id="t-fb"></div>`;
+}
+function matchL(r){
+  const c = test.cur;
+  if($("mL"+r).classList.contains("done")) return;
+  if(c.selL !== null) $("mL"+c.selL).classList.remove("sel");
+  c.selL = r;
+  $("mL"+r).classList.add("sel");
+}
+function matchR(r){
+  const c = test.cur;
+  if(c.selL === null || $("mR"+r).classList.contains("done")) return;
+  const L = $("mL"+c.selL), R = $("mR"+r);
+  if(c.left[c.selL] === c.right[r]){
+    L.classList.remove("sel"); L.classList.add("done"); R.classList.add("done");
+    c.selL = null; c.done++;
+    if(c.done === 4){
+      const ok = c.miss <= 1;
+      const fb = $("t-fb");
+      if(ok){ fb.textContent = "Eşleşti! 🎉"; fb.className = "t-feedback ok"; }
+      else { fb.textContent = "Bu tur biraz zorlandın."; fb.className = "t-feedback bad"; }
+      gradeQ(ok);
     }
-  }, 650);
+  } else {
+    c.miss++;
+    L.classList.add("bad"); R.classList.add("bad");
+    setTimeout(() => { L.classList.remove("bad"); R.classList.remove("bad"); }, 350);
+  }
 }
-function finishPlacement(level, passedAll){
+/* Ortak puanlama: 3. yanlışta bitir; basamakta 2 soru, ≥1 doğru → üst basamak, 0/2 → bitir */
+function gradeQ(ok){
+  test.totalQ++;
+  if(ok){ test.totalOk++; test.rungOk++; $("test-mece").innerHTML = birdFace("cheer", 40); }
+  else { test.wrongs++; $("test-mece").innerHTML = birdFace("oops", 40); }
+  setTimeout(() => {
+    if(!test) return; /* bu arada testten çıkılmış olabilir */
+    if(test.wrongs >= 3){ finishPlacement(test.lastPassed || SA_FLOOR[test.kind], false); return; }
+    test.qi++;
+    if(test.qi >= 2){
+      if(test.rungOk === 0){ finishPlacement(test.lastPassed || SA_FLOOR[test.kind], false); return; }
+      test.lastPassed = testLevel();
+      test.li++; test.qi = 0; test.rungOk = 0;
+      if(test.li >= test.ladder.length){ finishPlacement(test.lastPassed, test.lastPassed === LEVEL_COUNT); return; }
+    }
+    nextTestQ();
+  }, ok ? 800 : 1500);
+}
+function finishPlacement(level, passedAll, skipped){
   S.langs[test.lang] = newProfile(level);
   S.activeLang = test.lang;
   saveState();
   $("testresult-mece").innerHTML = birdFace(passedAll ? "party" : "cheer", 64);
   $("testresult-level").textContent = `Seviye ${level} · ${levelName(level)}`;
-  const stat = `Toplam ${test.totalQ} soruda ${test.totalOk} doğru yaptın.`;
   const featherNote = " Bu arada: sen öğrendikçe tüy koleksiyonum büyüyor 🪶 — ana sayfada, resmimin köşesindeki rozetten takip edebilirsin.";
-  $("testresult-detail").textContent = (passedAll
-    ? `Tüm seviyeleri geçtin, etkileyici! ${stat} En üst seviyeden başlıyorsun.`
-    : `${stat} ${LANGS[test.lang].name} yolculuğun ${level}. seviyeden başlıyor.`) + featherNote;
+  const stat = skipped
+    ? `Harika, temelden başlıyoruz! Her gün 10 kelimeyle seni adım adım yukarı taşıyacağım — acele yok.`
+    : passedAll
+      ? `Tüm basamakları geçtin, etkileyici! ${test.totalQ} soruda ${test.totalOk} doğru. En üst seviyeden başlıyorsun.`
+      : `${test.totalQ} soruda ${test.totalOk} doğru yaptın. ${LANGS[test.lang].name} yolculuğun ${level}. seviyeden başlıyor.`;
+  $("testresult-detail").textContent = stat + featherNote;
   show("scr-testresult");
 }
 
@@ -3109,9 +3306,10 @@ function startResetPlacement(){
    ilk kullanımda (henüz profil yokken meraktan girilen test) profil olmadığından showHome()
    çökebilir — bu yüzden onboarding ekranına, kaldığı dil/isim seçimiyle geri döner. */
 function abortTest(){
-  const lang = test && test.lang;
   test = null;
-  if(S && S.langs && S.langs[lang]) showHome();
+  /* Herhangi bir aktif profil varsa oraya dön (test edilen dilin profili olması şart değil —
+     ör. mevcut kullanıcı yeni bir dili denerken vazgeçebilir); yoksa onboarding'e. */
+  if(S && S.activeLang && S.langs && S.langs[S.activeLang]) showHome();
   else { renderOnboardLangs(); show("scr-onboard"); }
 }
 
@@ -3751,7 +3949,10 @@ function closeLangModal(){ $("lang-modal").classList.remove("open"); }
 function switchLang(k){
   closeLangModal();
   if(S.langs[k]){ S.activeLang = k; saveState(); showHome(); }
-  else { S.activeLang = k; saveState(); startPlacement(k); }
+  /* Profili olmayan dil: activeLang'e DOKUNMADAN tespite gönder — finishPlacement zaten
+     test.lang'i aktif yapar. (Eskiden burada erken değiştiriliyordu; testten vazgeçen
+     kullanıcı geçersiz aktif dille onboarding'e düşüyordu.) */
+  else startPlacement(k);
 }
 
 /* ============ SESLİ TELAFFUZ ============ */
@@ -3801,6 +4002,7 @@ function startVerify(){
 /* ============ BAŞLANGIÇ ============ */
 applyTheme();
 $("mece-onboard").innerHTML = meceMarkup();
+$("sa-mece").innerHTML = meceMarkup();
 $("mece-home").innerHTML = meceMarkup({ book:true });
 loadState();
 if(S && S.activeLang && S.langs[S.activeLang]){
