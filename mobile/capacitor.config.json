@@ -1,0 +1,6 @@
+{
+  "appId": "com.ebru.kelimece",
+  "appName": "Kelimece",
+  "webDir": "www",
+  "ios": { "contentInset": "always" }
+}
