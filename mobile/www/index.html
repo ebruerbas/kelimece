@@ -155,6 +155,8 @@
   .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 14px; }
   .chip { min-width: 40px; height: 46px; padding: 0 10px; border: 1.5px solid var(--border); border-radius: 12px; background: var(--card); font-weight: 800; font-size: 1.125rem; cursor: pointer; color: inherit; font-family: inherit; }
   .chip:disabled { opacity: 0.25; cursor: default; }
+  .chip.word { font-size: 0.9375rem; font-weight: 700; height: 40px; min-width: 0; padding: 0 12px; display: inline-flex; align-items: center; }
+  .built { min-height: 48px; display: flex; flex-wrap: wrap; gap: 6px; border: 1.5px dashed var(--border); border-radius: 12px; padding: 8px; margin-top: 12px; justify-content: center; }
   .match-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; margin-top: 10px; }
   .match-btn { padding: 12px 10px; border: 1.5px solid var(--border); border-radius: 12px; background: var(--card); font-weight: 600; font-size: 0.9375rem; cursor: pointer; text-align: center; color: inherit; font-family: inherit; }
   .match-btn.sel { border-color: var(--accent); background: var(--accent-soft); }
@@ -2927,13 +2929,14 @@ $("btn-start-test").addEventListener("click", ()=>{
    hem uzundu hem tahminle tutturulabiliyordu. Yeni akış:
    1) Öz değerlendirme ("Seni tanıyalım"): yeni başlayan quiz'e HİÇ girmez, Seviye 1'den başlar.
       Diğerleri bandına uygun basamak merdiveninden başlar (biraz→2, ileri→6).
-   2) Quiz çoktan seçmeli DEĞİL — üç format döner:
-      - Cümle boşluğu (şimdilik yalnız EN; cümle verisi diğer dillere gelince otomatik açılır):
-        örnek cümlede eksik kelimeyi TR anlam + ilk harf/harf sayısı ipucuyla YAZAR.
-      - Harf dizme: kelimenin karışık harflerini sırayla dizer.
+   2) Üç format döner (harf dizme ve cümle boşluğu denendi, kaldırıldı — bulmaca becerisi
+      ölçüyordu ve bazı kelimelerde anlamsız kaçıyordu):
+      - Çoktan seçmeli: şıklar AYNI seviyeden + yazım/anlam olarak hedefe en yakın adaylardan
+        (pickDistractors'ın Levenshtein tuzakları) — kolay elenen saçma şık çıkmaz.
+      - Cümle dizme (şimdilik yalnız EN; cümle verisi diğer dillere gelince otomatik açılır):
+        cümlenin Türkçesi gösterilir, karıştırılmış kelime çipleri doğru sıraya dizilir.
       - Eşleştirme: 4 kelime ↔ 4 anlam (aynı turda eş anlamlı TR karşılıklar filtrelenir;
         2+ hatalı deneme = tur yanlış sayılır). Tur, tek soru olarak puanlanır.
-      Serbest anlam çevirisi hiç yazdırılmaz — "goal/target→hedef" tarzı eş anlam mağduriyeti olmaz.
    3) Her basamakta 2 soru: en az 1 doğru → üst basamak; 0/2 → bitiş. Toplam 3. yanlışta
       quiz her durumda biter. Seviye = geçilen son basamak (hiç geçemediyse banda göre taban). */
 const SA_LADDER = { some: [2,4,6,9,12,16,20,25,30,35], good: [10,14,18,22,26,30,35] };
@@ -3025,103 +3028,95 @@ function pickTestWord(pred){
   test.used.push(wi);
   return wi;
 }
+/* Cümle dizmeye uygun mu: cümlesi var ve 3-9 kelimelik (çok uzunu mobilde çile oluyor) */
+function sentTokens(wi){
+  const s = sentenceFor(wi, "en");
+  if(!s) return null;
+  const full = s[0].replace("___", wFor(wi, "en"));
+  const toks = full.replace(/[.,!?;:"()]/g, "").split(/\s+/).filter(Boolean);
+  return (toks.length >= 3 && toks.length <= 9) ? toks : null;
+}
 function nextTestQ(){
   testHeader();
   const en = test.lang === "en";
   let fmt;
-  if(test.qi === 0) fmt = en ? "blank" : "arrange";
-  else fmt = (test.li % 2 === 0) ? "match" : (en ? "arrange" : "match");
-  if(fmt === "blank"){
-    const wi = pickTestWord(i => !!sentenceFor(i, "en"));
-    if(sentenceFor(wi, "en")) return qBlank(wi);
-    fmt = "arrange"; test.used.pop();
+  if(test.qi === 0) fmt = en ? (test.li % 2 === 0 ? "sent" : "mc") : "mc";
+  else fmt = en ? (test.li % 2 === 0 ? "mc" : "match") : "match";
+  if(fmt === "sent"){
+    const wi = pickTestWord(i => !!sentTokens(i));
+    if(sentTokens(wi)) return qSent(wi);
+    fmt = "mc"; /* uygun cümle yoksa çoktan seçmeliye düş */
   }
-  if(fmt === "arrange"){
-    const wi = pickTestWord(i => wFor(i, test.lang).replace(/ /g,"").length <= 12);
-    return qArrange(wi);
-  }
+  if(fmt === "mc") return qMC(pickTestWord());
   qMatch();
 }
-/* Format 1 — cümle boşluğu: yazılan cevap norm() ile karşılaştırılır (aksan/büyük-küçük toleransı) */
-function qBlank(wi){
-  const s = sentenceFor(wi, "en");
-  const ans = wFor(wi, "en");
-  const mask = ans.split("").map((ch,i)=> i===0 ? ch : (ch===" " ? "&nbsp;&nbsp;" : "_")).join(" ");
-  test.cur = { fmt:"blank", wi, ans };
+/* Format 1 — çoktan seçmeli: çeldiriciler aynı seviyeden + hedefe en yakın adaylardan
+   (pickDistractors: Levenshtein "sahte dost" tuzakları) — şıklar saçma değil, yakın olur */
+function qMC(wi){
+  test.cur = { fmt:"mc", wi, ans: wi };
+  const opts = shuffle([wi, ...pickDistractors(wi, 3, wTr)]);
   $("test-area").innerHTML =
-    `<p class="sub" style="text-align:center;margin-bottom:6px">Boşluğa gelen kelimeyi yaz</p>
-     <div class="t-sentence">${esc(s[0]).replace("___", '<span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;</span>')}</div>
-     <div class="t-hint">Türkçesi: <b>${esc(wTr(wi))}</b> &nbsp;·&nbsp; <b>${mask}</b></div>
-     <div style="margin-top:14px"><input type="text" id="t-answer" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Cevabın"></div>
-     <div style="margin-top:12px;text-align:center"><button class="btn" id="t-submit" onclick="submitTyped()">Kontrol Et</button></div>
-     <div class="t-feedback" id="t-fb"></div>`;
-  const inp = $("t-answer");
-  inp.addEventListener("keydown", e => { if(e.key === "Enter") submitTyped(); });
-  inp.focus();
+    `<p class="sub" style="text-align:center;margin-bottom:6px">Bu kelimenin Türkçesi ne?</p>
+     <div class="bigword">${esc(wFor(wi, test.lang))}</div>
+     <div id="t-opts" style="margin-top:18px">${opts.map(k =>
+       `<button class="q-opt" onclick="mcAnswer(${k}, this)">${esc(wTr(k))}</button>`).join("")}</div>`;
 }
-function submitTyped(){
-  const val = $("t-answer").value;
-  if(!val.trim()) return;
-  $("t-answer").disabled = true; $("t-submit").disabled = true;
-  const ok = norm(val) === norm(test.cur.ans);
-  const fb = $("t-fb");
-  if(ok){ fb.textContent = "Doğru! 🎉"; fb.className = "t-feedback ok"; }
-  else { fb.textContent = `Doğrusu: ${test.cur.ans}`; fb.className = "t-feedback bad"; }
+function mcAnswer(sel, btn){
+  document.querySelectorAll("#t-opts .q-opt").forEach(b => b.onclick = null);
+  const ok = sel === test.cur.ans;
+  if(ok) btn.classList.add("correct");
+  else {
+    btn.classList.add("wrong");
+    document.querySelectorAll("#t-opts .q-opt").forEach(b => {
+      if(b.textContent === wTr(test.cur.ans)) b.classList.add("correct");
+    });
+  }
   gradeQ(ok);
 }
-/* Format 2 — harf dizme: karışık harf çipleri sırayla dizilir; tamamlanınca otomatik kontrol */
-function qArrange(wi){
-  const ans = wFor(wi, test.lang);
-  const letters = ans.replace(/ /g, "").split("");
-  let chips = shuffle(letters);
-  if(letters.length > 2 && chips.join("") === letters.join("")) chips = shuffle(letters);
-  test.cur = { fmt:"arrange", wi, ans, chips, picked: [] };
+/* Format 2 — cümle dizme: cümlenin Türkçesi gösterilir, karışık kelime çipleri sıraya dizilir */
+function qSent(wi){
+  const toks = sentTokens(wi);
+  let chips = shuffle(toks);
+  if(toks.length > 2 && chips.join(" ") === toks.join(" ")) chips = shuffle(toks);
+  test.cur = { fmt:"sent", wi, toks, chips, picked: [], pickedIdx: [] };
   $("test-area").innerHTML =
-    `<p class="sub" style="text-align:center;margin-bottom:6px">Harfleri doğru sıraya diz</p>
-     <div class="t-hint" style="margin-top:2px">Türkçesi: <b>${esc(wTr(wi))}</b></div>
-     <div class="slots" id="t-slots"></div>
+    `<p class="sub" style="text-align:center;margin-bottom:6px">Kelimeleri doğru sıraya dizerek cümleyi kur</p>
+     <div class="t-sentence" style="font-weight:700">${esc(sentenceFor(wi, "en")[1])}</div>
+     <div class="built" id="t-built"></div>
      <div class="chips" id="t-chips"></div>
-     <div style="margin-top:12px;text-align:center"><button class="btn ghost small" onclick="arrangeUndo()">⌫ Geri al</button></div>
+     <div style="margin-top:12px;text-align:center"><button class="btn ghost small" onclick="sentUndo()">⌫ Geri al</button></div>
      <div class="t-feedback" id="t-fb"></div>`;
-  renderArrange();
+  renderSent();
 }
-function renderArrange(){
+function renderSent(){
   const c = test.cur;
-  let pi = 0;
-  $("t-slots").innerHTML = c.ans.split("").map(ch => {
-    if(ch === " ") return '<span class="slot sep"></span>';
-    const val = c.picked[pi] || "";
-    pi++;
-    return `<span class="slot ${val?"filled":""}" onclick="arrangeUndo()">${esc(val)}</span>`;
-  }).join("");
-  $("t-chips").innerHTML = c.chips.map((ch,i) =>
-    `<button class="chip" ${c.pickedIdx && c.pickedIdx.includes(i) ? "disabled" : ""} onclick="arrangePick(${i})">${esc(ch)}</button>`).join("");
+  $("t-built").innerHTML = c.picked.length
+    ? c.picked.map(t => `<span class="chip word" onclick="sentUndo()">${esc(t)}</span>`).join("")
+    : '<span class="sub" style="align-self:center">Cümle burada oluşacak…</span>';
+  $("t-chips").innerHTML = c.chips.map((t,i) =>
+    `<button class="chip word" ${c.pickedIdx.includes(i) ? "disabled" : ""} onclick="sentPick(${i})">${esc(t)}</button>`).join("");
 }
-function arrangePick(i){
+function sentPick(i){
   const c = test.cur;
-  c.pickedIdx = c.pickedIdx || [];
-  if(c.pickedIdx.includes(i)) return;
+  if(c.done || c.pickedIdx.includes(i)) return;
   c.pickedIdx.push(i);
   c.picked.push(c.chips[i]);
-  renderArrange();
-  const need = c.ans.replace(/ /g, "").length;
-  if(c.picked.length === need){
-    const ok = c.picked.join("") === c.ans.replace(/ /g, "");
+  renderSent();
+  if(c.picked.length === c.toks.length){
+    c.done = true;
+    const ok = c.picked.join(" ") === c.toks.join(" ");
     const fb = $("t-fb");
     if(ok){ fb.textContent = "Doğru! 🎉"; fb.className = "t-feedback ok"; }
-    else { fb.textContent = `Doğrusu: ${c.ans}`; fb.className = "t-feedback bad"; }
-    document.querySelectorAll("#t-chips .chip").forEach(b => b.onclick = null);
+    else { fb.textContent = `Doğrusu: ${c.toks.join(" ")}`; fb.className = "t-feedback bad"; }
     gradeQ(ok);
   }
 }
-function arrangeUndo(){
+function sentUndo(){
   const c = test.cur;
-  if(!c.pickedIdx || !c.pickedIdx.length) return;
-  const need = c.ans.replace(/ /g, "").length;
-  if(c.picked.length === need) return; /* kontrol başladıysa dokunma */
+  if(c.done || !c.pickedIdx.length) return;
   c.pickedIdx.pop();
   c.picked.pop();
-  renderArrange();
+  renderSent();
 }
 /* Format 3 — eşleştirme: 4 kelime ↔ 4 anlam; aynı turda eş anlamlı TR karşılık çıkmaz.
    2+ hatalı deneme = tur yanlış. Tur tek soru sayılır. */
