@@ -329,7 +329,7 @@
       <p class="sub" style="margin-bottom:4px">Sana en uygun başlangıcı seçelim:</p>
       <div class="sa-opt" onclick="saPick('new')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')saPick('new')"><span class="ico">🌱</span><div><div class="tt">Yeni başlıyorum</div><div class="dd">Sıfırdan ya da çok az biliyorum — temelden başlayalım.</div></div></div>
       <div class="sa-opt" onclick="saPick('some')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')saPick('some')"><span class="ico">🌿</span><div><div class="tt">Biraz biliyorum</div><div class="dd">Günlük kelimeleri tanıyorum, nereden başlamalıyım bilmiyorum.</div></div></div>
-      <div class="sa-opt" onclick="saPick('good')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')saPick('good')"><span class="ico">🌳</span><div><div class="tt">Biliyorum ama konuşamıyorum</div><div class="dd">Okuyup anlıyorum; kelime hazinemi güçlendirmek istiyorum.</div></div></div>
+      <div class="sa-opt" onclick="saPick('good')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')saPick('good')"><span class="ico">🌳</span><div><div class="tt">Kendime güveniyorum</div><div class="dd">Temelim sağlam; kendimi üst seviyelerde denemek istiyorum.</div></div></div>
     </div>
   </div>
 
@@ -2936,8 +2936,8 @@ $("btn-start-test").addEventListener("click", ()=>{
       Serbest anlam çevirisi hiç yazdırılmaz — "goal/target→hedef" tarzı eş anlam mağduriyeti olmaz.
    3) Her basamakta 2 soru: en az 1 doğru → üst basamak; 0/2 → bitiş. Toplam 3. yanlışta
       quiz her durumda biter. Seviye = geçilen son basamak (hiç geçemediyse banda göre taban). */
-const SA_LADDER = { some: [2,4,6,9,12,16,20,25,30,35], good: [6,9,12,16,20,25,30,35] };
-const SA_FLOOR  = { some: 1, good: 3 };
+const SA_LADDER = { some: [2,4,6,9,12,16,20,25,30,35], good: [10,14,18,22,26,30,35] };
+const SA_FLOOR  = { some: 1, good: 5 };
 let test = null;
 function startPlacement(lang){
   test = { lang, stage:"sa" };
